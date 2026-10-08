@@ -57,8 +57,14 @@
 
   h1 {
     font-size: 22px;
-    margin: 0 0 16px;
+    margin: 0 0 4px;
     letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 0 0 16px;
   }
 
   h2 {
@@ -121,8 +127,6 @@
     border-radius: 10px;
     overflow: hidden;
   }
-
-  .results.six { grid-template-columns: repeat(3, 1fr); }
 
   .cell {
     background: var(--card);
@@ -219,13 +223,15 @@
 
   @media (max-width: 419px) {
     .inputs { grid-template-columns: 1fr; }
-    .results.six { grid-template-columns: repeat(2, 1fr); }
+    .avg-results .cell { padding: 10px; }
+    .avg-results .cell output { font-size: clamp(12.5px, 4vw, 16px); }
   }
 </style>
 </head>
 <body>
 <main>
   <h1>Trade Calculator</h1>
+  <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
 
   <section class="card" aria-labelledby="order-title">
     <h2 id="order-title">Your order</h2>
@@ -263,7 +269,7 @@
       <div class="hero-sub" id="a-sub">—</div>
     </div>
 
-    <div class="results six" aria-live="polite">
+    <div class="results avg-results" aria-live="polite">
       <div class="cell"><span>Total invested</span><output id="a-invested">—</output></div>
       <div class="cell"><span>Total shares</span><output id="a-shares">—</output></div>
       <div class="cell"><span>Break-even price</span><output id="a-be">—</output></div>
