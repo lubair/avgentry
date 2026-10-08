@@ -8,26 +8,40 @@
   :root {
     --bg: #eef1ec;
     --card: #fbfcfa;
+    --field: #f3f5f1;
     --text: #16201b;
     --muted: #66736b;
     --line: #d5dcd4;
+    --seg: #e1e6df;
+    --hover: rgba(22, 32, 27, 0.05);
     --accent: #1f6f50;
     --on-accent: #fbfcfa;
+    --ring: rgba(31, 111, 80, 0.22);
     --up: #1a8a5a;
     --down: #b4382c;
+    --backdrop: rgba(15, 21, 18, 0.28);
+    --lift: 0 1px 2px rgba(22, 32, 27, 0.08), 0 0 0 0.5px rgba(22, 32, 27, 0.06);
+    --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0f1512;
       --card: #171f1b;
+      --field: #121915;
       --text: #e8eee9;
       --muted: #8d9b93;
       --line: #27312c;
+      --seg: #1d2621;
+      --hover: rgba(232, 238, 233, 0.06);
       --accent: #4cc38a;
       --on-accent: #0f1512;
+      --ring: rgba(76, 195, 138, 0.3);
       --up: #4cc38a;
       --down: #ff7a6b;
+      --backdrop: rgba(0, 0, 0, 0.5);
+      --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+      --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
     }
   }
 
@@ -39,58 +53,211 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.45;
     font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  main {
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  button, input, .opt {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, input, .opt { transition: none; }
+  }
+
+  .app {
     max-width: 560px;
     margin: 0 auto;
     padding:
-      calc(24px + env(safe-area-inset-top))
+      calc(20px + env(safe-area-inset-top))
       calc(16px + env(safe-area-inset-right))
-      calc(32px + env(safe-area-inset-bottom))
+      calc(28px + env(safe-area-inset-bottom))
       calc(16px + env(safe-area-inset-left));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
   }
 
   h1 {
     font-size: 22px;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
+    margin: 0 0 2px;
+    letter-spacing: -0.015em;
   }
 
   .subtitle {
     color: var(--muted);
     font-size: 15px;
-    margin: 0 0 16px;
+    margin: 0;
   }
 
   h2 {
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     margin: 0 0 12px;
   }
 
+  /* ---------- Stock switcher ---------- */
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--seg);
+    border-radius: 11px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 6px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab[aria-selected="true"] {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--lift);
+  }
+
+  .tab.untitled { font-weight: 500; font-style: italic; }
+
+  .add-stock {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--accent);
+    font-size: 21px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    padding: 0 0 2px;
+  }
+
+  .add-stock:hover { border-color: var(--accent); }
+
+  /* ---------- Stock header ---------- */
+  .stock-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .stock-id {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ticker {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .ticker.untitled { color: var(--muted); font-weight: 600; }
+
+  .stock-name {
+    flex: 0 1 340px;
+    min-width: 0;
+    font-size: 16px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin-left: -8px;
+    text-overflow: ellipsis;
+  }
+
+  .stock-name:hover { border-color: var(--line); }
+
+  @media (pointer: coarse) {
+    .stock-name { padding: 8px; }
+  }
+
+  .text-btn {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font-size: 15px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .text-btn:hover { background: var(--hover); }
+  .text-btn.quiet { color: var(--muted); }
+  .text-btn.quiet:hover { color: var(--down); }
+
+  /* ---------- Cards ---------- */
   .card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 16px;
+    border-radius: 16px;
+    padding: 18px;
   }
 
   .note {
     color: var(--muted);
     font-size: 14px;
-    margin: -4px 0 14px;
+    margin: -6px 0 12px;
   }
 
   .inputs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
   label {
@@ -98,6 +265,9 @@
     font-size: 13px;
     color: var(--muted);
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   input {
@@ -105,14 +275,25 @@
     font: inherit;
     font-variant-numeric: tabular-nums;
     color: var(--text);
-    background: var(--bg);
+    background: var(--field);
     border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 9px 10px;
+    border-radius: 10px;
+    padding: 9px 11px;
     min-width: 0;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
-  input:focus-visible,
+  input[type="number"] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
   button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -124,7 +305,7 @@
     gap: 1px;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
   }
 
@@ -154,51 +335,57 @@
     margin: 0 0 12px;
     padding: 0;
     display: grid;
+    align-content: start;
     gap: 10px;
   }
 
   .buy {
+    position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr auto;
     gap: 10px;
     align-items: end;
   }
 
+  .buy + .buy label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
   .remove {
-    font: inherit;
     font-size: 20px;
     line-height: 1;
-    width: 40px;
-    height: 41px;
+    width: 42px;
+    height: 43px;
     color: var(--muted);
     background: transparent;
     border: 1px solid var(--line);
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 10px;
   }
 
-  .remove:hover { color: var(--down); }
+  .remove:hover { color: var(--down); background: var(--hover); }
 
   .add {
     width: 100%;
-    font: inherit;
     font-size: 15px;
     color: var(--accent);
     background: transparent;
     border: 1px dashed var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px;
-    margin-bottom: 16px;
-    cursor: pointer;
   }
 
-  .add:hover { border-color: var(--accent); }
+  .add:hover { border-color: var(--accent); background: var(--hover); }
 
   .hero {
     background: var(--accent);
     color: var(--on-accent);
-    border-radius: 10px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 16px 18px;
     margin-bottom: 12px;
   }
 
@@ -221,76 +408,305 @@
     opacity: 0.85;
   }
 
+  .workspace {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .col {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    min-width: 0;
+  }
+
+  /* ---------- Stock picker ---------- */
+  dialog {
+    width: min(520px, calc(100% - 24px));
+    max-height: calc(100% - 24px);
+    margin: max(12px, 9vh) auto auto;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--sheet);
+  }
+
+  dialog::backdrop { background: var(--backdrop); }
+
+  .picker {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .picker-head h2 { margin: 0 0 0 4px; }
+
+  .picker input { font-size: 17px; padding: 10px 12px; }
+
+  .options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: min(320px, 46vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .options:empty { display: none; }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+
+  .opt.active { background: var(--hover); }
+
+  .opt-sym {
+    flex: none;
+    min-width: 64px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .opt-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .opt-tag {
+    flex: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+
+  .picker-note {
+    margin: 0 4px 2px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .picker-note:empty { display: none; }
+
+  @media (pointer: coarse) {
+    .tab { padding: 9px 16px; }
+    .add-stock { width: 40px; height: 40px; }
+    .text-btn { padding: 10px 12px; }
+  }
+
   @media (max-width: 419px) {
     .inputs { grid-template-columns: 1fr; }
     .avg-results .cell { padding: 10px; }
     .avg-results .cell output { font-size: clamp(12.5px, 4vw, 16px); }
+    .ticker { font-size: 24px; }
+  }
+
+  /* ---------- iPad and desktop ---------- */
+  @media (min-width: 720px) {
+    .app {
+      max-width: 1120px;
+      padding:
+        calc(22px + env(safe-area-inset-top))
+        calc(24px + env(safe-area-inset-right))
+        calc(22px + env(safe-area-inset-bottom))
+        calc(24px + env(safe-area-inset-left));
+    }
+
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .col { gap: 16px; }
+
+    .buys { max-height: 320px; overflow-y: auto; padding: 2px; margin: -2px -2px 10px; }
+
+    .hero { padding: 20px 22px; }
+    .hero-value { font-size: 44px; }
+  }
+
+  @media (min-width: 1000px) {
+    .topbar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .topbar header { flex: none; }
+
+    .switcher { flex: 0 1 auto; }
+  }
+
+  /* Fit the calculator in the viewport when there is enough height; otherwise the page scrolls normally. */
+  @media (min-width: 720px) and (min-height: 720px) {
+    .app {
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .workspace {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .col {
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .col-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .buys-card {
+      flex: 1 1 auto;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .buys {
+      flex: 1 1 auto;
+      min-height: 70px;
+      max-height: none;
+    }
+
+    .add { flex: none; }
   }
 </style>
 </head>
 <body>
-<main>
-  <h1>Trade Calculator</h1>
-  <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
+<div class="app">
+  <div class="topbar">
+    <header>
+      <h1>Trade Calculator</h1>
+      <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
+    </header>
 
-  <section class="card" aria-labelledby="order-title">
-    <h2 id="order-title">Your order</h2>
-    <div class="inputs">
-      <div>
-        <label for="entry">Entry price ($)</label>
-        <input id="entry" type="number" inputmode="decimal" step="any" autocomplete="off" value="18">
-      </div>
-      <div>
-        <label for="exit">Exit price ($)</label>
-        <input id="exit" type="number" inputmode="decimal" step="any" autocomplete="off" value="22">
-      </div>
-      <div>
-        <label for="invested">Invested ($)</label>
-        <input id="invested" type="number" inputmode="decimal" step="any" autocomplete="off" value="1000">
-      </div>
-    </div>
-    <div class="results" aria-live="polite">
-      <div class="cell"><span>Shares</span><output id="o-shares">—</output></div>
-      <div class="cell"><span>Value at exit</span><output id="o-value">—</output></div>
-      <div class="cell"><span>Profit / loss</span><output id="o-pl">—</output></div>
-      <div class="cell"><span>Return</span><output id="o-ret">—</output></div>
-    </div>
-  </section>
+    <nav class="switcher" aria-label="Stocks">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Your stocks"></div>
+      <button type="button" class="add-stock" id="add-stock" aria-label="Add stock" title="Add stock">+</button>
+    </nav>
+  </div>
 
-  <section class="card" aria-labelledby="avg-title">
-    <h2 id="avg-title">Average cost</h2>
-    <p class="note">If the price drops, add a buy at the lower price. Add as many as you like.</p>
-    <ul class="buys" id="buys"></ul>
-    <button type="button" class="add" id="add">Add another buy</button>
+  <div class="stock-head">
+    <div class="stock-id">
+      <span class="ticker" id="s-ticker"></span>
+      <button type="button" class="text-btn" id="s-assign" hidden>Assign ticker</button>
+      <input class="stock-name" id="s-name" type="text" placeholder="Company name" aria-label="Company name" autocomplete="off" spellcheck="false">
+    </div>
+    <button type="button" class="text-btn quiet" id="s-remove">Remove</button>
+  </div>
 
-    <div class="hero" aria-live="polite">
-      <div class="hero-label">New average cost</div>
-      <output class="hero-value" id="a-avg">—</output>
-      <div class="hero-sub" id="a-sub">—</div>
+  <main class="workspace">
+    <div class="col col-left">
+      <section class="card" aria-labelledby="order-title">
+        <h2 id="order-title">Your order</h2>
+        <div class="inputs">
+          <div>
+            <label for="entry">Entry price ($)</label>
+            <input id="entry" type="number" inputmode="decimal" step="any" autocomplete="off">
+          </div>
+          <div>
+            <label for="exit">Exit price ($)</label>
+            <input id="exit" type="number" inputmode="decimal" step="any" autocomplete="off">
+          </div>
+          <div>
+            <label for="invested">Invested ($)</label>
+            <input id="invested" type="number" inputmode="decimal" step="any" autocomplete="off">
+          </div>
+        </div>
+        <div class="results" aria-live="polite">
+          <div class="cell"><span>Shares</span><output id="o-shares">—</output></div>
+          <div class="cell"><span>Value at exit</span><output id="o-value">—</output></div>
+          <div class="cell"><span>Profit / loss</span><output id="o-pl">—</output></div>
+          <div class="cell"><span>Return</span><output id="o-ret">—</output></div>
+        </div>
+      </section>
+
+      <section class="card buys-card" aria-labelledby="buys-title">
+        <h2 id="buys-title">Additional buys</h2>
+        <p class="note">If the price drops, add a buy at the lower price. Add as many as you like.</p>
+        <ul class="buys" id="buys"></ul>
+        <button type="button" class="add" id="add">Add another buy</button>
+      </section>
     </div>
 
-    <div class="results avg-results" aria-live="polite">
-      <div class="cell"><span>Total invested</span><output id="a-invested">—</output></div>
-      <div class="cell"><span>Total shares</span><output id="a-shares">—</output></div>
-      <div class="cell"><span>Break-even price</span><output id="a-be">—</output></div>
-      <div class="cell"><span>Value at exit</span><output id="a-value">—</output></div>
-      <div class="cell"><span>Profit / loss</span><output id="a-pl">—</output></div>
-      <div class="cell"><span>Return</span><output id="a-ret">—</output></div>
+    <div class="col col-right">
+      <section class="card" aria-labelledby="avg-title">
+        <h2 id="avg-title">Average cost</h2>
+        <div class="hero" aria-live="polite">
+          <div class="hero-label">New average cost</div>
+          <output class="hero-value" id="a-avg">—</output>
+          <div class="hero-sub" id="a-sub">—</div>
+        </div>
+
+        <div class="results avg-results" aria-live="polite">
+          <div class="cell"><span>Total invested</span><output id="a-invested">—</output></div>
+          <div class="cell"><span>Total shares</span><output id="a-shares">—</output></div>
+          <div class="cell"><span>Break-even price</span><output id="a-be">—</output></div>
+          <div class="cell"><span>Value at exit</span><output id="a-value">—</output></div>
+          <div class="cell"><span>Profit / loss</span><output id="a-pl">—</output></div>
+          <div class="cell"><span>Return</span><output id="a-ret">—</output></div>
+        </div>
+      </section>
     </div>
-  </section>
-</main>
+  </main>
+</div>
+
+<dialog id="picker" aria-labelledby="picker-title">
+  <div class="picker">
+    <div class="picker-head">
+      <h2 id="picker-title">Add stock</h2>
+      <button type="button" class="text-btn" id="picker-cancel">Cancel</button>
+    </div>
+    <input id="q" type="text" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="options"
+      placeholder="Company name or ticker" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+    <ul class="options" id="options" role="listbox" aria-label="Matching stocks"></ul>
+    <p class="picker-note" id="picker-note" aria-live="polite"></p>
+  </div>
+</dialog>
 
 <script>
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "trade-calculator-v1";
+  var STORAGE_V1 = "trade-calculator-v1";
+  var STORAGE_KEY = "trade-calculator-v2";
   var DEFAULTS = {
     entry: "18",
     exit: "22",
     invested: "1000",
     buys: [{ price: "16", amount: "1000" }]
   };
+  var TICKER_RE = /^[A-Z0-9][A-Z0-9.\-]{0,9}$/;
+  var MAX_RESULTS = 50;
 
   var $ = function (id) { return document.getElementById(id); };
   var entryEl = $("entry");
@@ -298,6 +714,16 @@
   var investedEl = $("invested");
   var buysEl = $("buys");
   var addBtn = $("add");
+  var tabsEl = $("tabs");
+  var addStockBtn = $("add-stock");
+  var tickerEl = $("s-ticker");
+  var nameEl = $("s-name");
+  var assignBtn = $("s-assign");
+  var removeStockBtn = $("s-remove");
+  var picker = $("picker");
+  var qEl = $("q");
+  var optionsEl = $("options");
+  var noteEl = $("picker-note");
 
   // ---------- Formatting ----------
   var DASH = "—";
@@ -333,7 +759,110 @@
     }
   }
 
-  // ---------- Rows ----------
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // ---------- State ----------
+  var state = null;
+
+  function newId() {
+    return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function makeStock(ticker, name, values) {
+    var v = values || { entry: "", exit: "", invested: "", buys: [{ price: "", amount: "" }] };
+    return {
+      id: newId(),
+      ticker: ticker,
+      name: name,
+      entry: v.entry,
+      exit: v.exit,
+      invested: v.invested,
+      buys: v.buys.map(function (b) { return { price: b.price, amount: b.amount }; })
+    };
+  }
+
+  function str(v, fallback) { return typeof v === "string" ? v : fallback; }
+
+  function readBuys(list) {
+    var buys = [];
+    for (var i = 0; i < list.length; i++) {
+      var b = list[i];
+      if (!b || typeof b !== "object") continue;
+      buys.push({ price: str(b.price, ""), amount: str(b.amount, "") });
+    }
+    return buys;
+  }
+
+  function readJSON(key) {
+    var raw;
+    try {
+      raw = window.localStorage.getItem(key);
+    } catch (e) { return null; }
+    if (raw === null) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+
+  function loadV2() {
+    var data = readJSON(STORAGE_KEY);
+    if (!data || typeof data !== "object" || !Array.isArray(data.stocks)) return null;
+    var stocks = [];
+    var seen = {};
+    for (var i = 0; i < data.stocks.length; i++) {
+      var s = data.stocks[i];
+      if (!s || typeof s !== "object") continue;
+      var id = typeof s.id === "string" && s.id && !seen[s.id] ? s.id : newId();
+      seen[id] = true;
+      stocks.push({
+        id: id,
+        ticker: str(s.ticker, "").toUpperCase(),
+        name: str(s.name, ""),
+        entry: str(s.entry, ""),
+        exit: str(s.exit, ""),
+        invested: str(s.invested, ""),
+        buys: Array.isArray(s.buys) ? readBuys(s.buys) : []
+      });
+    }
+    if (!stocks.length) return null;
+    var activeId = stocks.some(function (s) { return s.id === data.activeId; }) ? data.activeId : stocks[0].id;
+    return { activeId: activeId, stocks: stocks };
+  }
+
+  function loadV1() {
+    var data = readJSON(STORAGE_V1);
+    if (!data || typeof data !== "object" || !Array.isArray(data.buys)) return null;
+    return {
+      entry: str(data.entry, DEFAULTS.entry),
+      exit: str(data.exit, DEFAULTS.exit),
+      invested: str(data.invested, DEFAULTS.invested),
+      buys: readBuys(data.buys)
+    };
+  }
+
+  function saveState() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) { /* storage unavailable or full */ }
+  }
+
+  function active() {
+    for (var i = 0; i < state.stocks.length; i++) {
+      if (state.stocks[i].id === state.activeId) return state.stocks[i];
+    }
+    return state.stocks[0];
+  }
+
+  function findByTicker(ticker) {
+    for (var i = 0; i < state.stocks.length; i++) {
+      if (state.stocks[i].ticker === ticker) return state.stocks[i];
+    }
+    return null;
+  }
+
+  // ---------- Rendering ----------
   var rowSeq = 0;
 
   function createRow(price, amount) {
@@ -353,63 +882,52 @@
     return li;
   }
 
-  // ---------- State ----------
-  function readState() {
-    var buys = [];
-    var rows = buysEl.querySelectorAll(".buy");
-    for (var i = 0; i < rows.length; i++) {
-      buys.push({
-        price: rows[i].querySelector(".b-price").value,
-        amount: rows[i].querySelector(".b-amount").value
-      });
-    }
-    return { entry: entryEl.value, exit: exitEl.value, invested: investedEl.value, buys: buys };
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    state.stocks.forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tab" + (s.ticker ? "" : " untitled");
+      b.setAttribute("role", "tab");
+      b.dataset.id = s.id;
+      b.textContent = s.ticker || "Untitled";
+      if (s.name) b.title = s.name;
+      var selected = s.id === state.activeId;
+      b.setAttribute("aria-selected", selected ? "true" : "false");
+      b.tabIndex = selected ? 0 : -1;
+      tabsEl.appendChild(b);
+    });
+    var current = tabsEl.querySelector('[aria-selected="true"]');
+    if (current) current.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
-  function saveState() {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(readState()));
-    } catch (e) { /* storage unavailable or full */ }
-  }
+  function renderStock() {
+    var s = active();
+    tickerEl.textContent = s.ticker || "Untitled";
+    tickerEl.classList.toggle("untitled", !s.ticker);
+    assignBtn.hidden = !!s.ticker;
+    nameEl.value = s.name;
+    document.title = s.ticker ? s.ticker + " · Trade Calculator" : "Trade Calculator";
 
-  function loadState() {
-    var raw;
-    try {
-      raw = window.localStorage.getItem(STORAGE_KEY);
-    } catch (e) { return null; }
-    if (raw === null) return null;
-    try {
-      var data = JSON.parse(raw);
-      if (!data || typeof data !== "object" || !Array.isArray(data.buys)) return null;
-      var str = function (v, fallback) { return typeof v === "string" ? v : fallback; };
-      var buys = [];
-      for (var i = 0; i < data.buys.length; i++) {
-        var b = data.buys[i];
-        if (!b || typeof b !== "object") continue;
-        buys.push({ price: str(b.price, ""), amount: str(b.amount, "") });
-      }
-      return {
-        entry: str(data.entry, DEFAULTS.entry),
-        exit: str(data.exit, DEFAULTS.exit),
-        invested: str(data.invested, DEFAULTS.invested),
-        buys: buys
-      };
-    } catch (e) { return null; }
-  }
-
-  function applyState(s) {
     entryEl.value = s.entry;
     exitEl.value = s.exit;
     investedEl.value = s.invested;
     buysEl.innerHTML = "";
     for (var i = 0; i < s.buys.length; i++) createRow(s.buys[i].price, s.buys[i].amount);
+    calculate();
+  }
+
+  function render() {
+    renderTabs();
+    renderStock();
   }
 
   // ---------- Calculation ----------
   function calculate() {
-    var entry = parse(entryEl.value);
-    var exit = parse(exitEl.value);
-    var invested = parse(investedEl.value);
+    var s = active();
+    var entry = parse(s.entry);
+    var exit = parse(s.exit);
+    var invested = parse(s.invested);
 
     var orderValid = entry > 0 && invested > 0;
     var exitValid = exit >= 0;
@@ -428,10 +946,9 @@
     // Section 2 — the original order counts as the first buy
     var totalShares = orderValid ? shares : 0;
     var totalInvested = orderValid ? invested : 0;
-    var rows = buysEl.querySelectorAll(".buy");
-    for (var i = 0; i < rows.length; i++) {
-      var p = parse(rows[i].querySelector(".b-price").value);
-      var a = parse(rows[i].querySelector(".b-amount").value);
+    for (var i = 0; i < s.buys.length; i++) {
+      var p = parse(s.buys[i].price);
+      var a = parse(s.buys[i].amount);
       if (p > 0 && a > 0) {
         totalShares += a / p;
         totalInvested += a;
@@ -457,36 +974,282 @@
     setOut($("a-ret"), fmtPct(tRet), tRet);
   }
 
-  // ---------- Events ----------
+  // ---------- Calculator events ----------
   function onChange() {
     calculate();
     saveState();
   }
 
-  entryEl.addEventListener("input", onChange);
-  exitEl.addEventListener("input", onChange);
-  investedEl.addEventListener("input", onChange);
-  buysEl.addEventListener("input", onChange);
+  function bindField(el, key) {
+    el.addEventListener("input", function () {
+      active()[key] = el.value;
+      onChange();
+    });
+  }
+  bindField(entryEl, "entry");
+  bindField(exitEl, "exit");
+  bindField(investedEl, "invested");
+
+  function rowIndex(li) {
+    return Array.prototype.indexOf.call(buysEl.children, li);
+  }
+
+  buysEl.addEventListener("input", function (e) {
+    var li = e.target.closest(".buy");
+    if (!li) return;
+    var buy = active().buys[rowIndex(li)];
+    if (!buy) return;
+    if (e.target.classList.contains("b-price")) buy.price = e.target.value;
+    else if (e.target.classList.contains("b-amount")) buy.amount = e.target.value;
+    onChange();
+  });
 
   buysEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".remove");
     if (!btn) return;
     var li = btn.closest(".buy");
     var next = li.nextElementSibling || li.previousElementSibling;
+    active().buys.splice(rowIndex(li), 1);
     li.remove();
     onChange();
     (next ? next.querySelector(".b-price") : addBtn).focus();
   });
 
   addBtn.addEventListener("click", function () {
+    active().buys.push({ price: "", amount: "" });
     var li = createRow("", "");
     onChange();
     li.querySelector(".b-price").focus();
   });
 
+  nameEl.addEventListener("input", function () {
+    active().name = nameEl.value;
+    var tab = tabsEl.querySelector('[aria-selected="true"]');
+    if (tab) tab.title = nameEl.value;
+    saveState();
+  });
+
+  // ---------- Stock management ----------
+  function switchTo(id) {
+    if (!state.stocks.some(function (s) { return s.id === id; })) return;
+    state.activeId = id;
+    saveState();
+    render();
+  }
+
+  tabsEl.addEventListener("click", function (e) {
+    var tab = e.target.closest(".tab");
+    if (tab && tab.dataset.id !== state.activeId) switchTo(tab.dataset.id);
+  });
+
+  tabsEl.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
+    var ids = state.stocks.map(function (s) { return s.id; });
+    var i = ids.indexOf(state.activeId);
+    if (e.key === "ArrowRight") i = (i + 1) % ids.length;
+    else if (e.key === "ArrowLeft") i = (i - 1 + ids.length) % ids.length;
+    else if (e.key === "Home") i = 0;
+    else i = ids.length - 1;
+    e.preventDefault();
+    switchTo(ids[i]);
+    tabsEl.querySelector('[aria-selected="true"]').focus();
+  });
+
+  removeStockBtn.addEventListener("click", function () {
+    var s = active();
+    var label = s.ticker || "this untitled stock";
+    if (!window.confirm("Remove " + label + "? Its prices and buys will be deleted.")) return;
+    var i = state.stocks.indexOf(s);
+    state.stocks.splice(i, 1);
+    if (!state.stocks.length) state.stocks.push(makeStock("", ""));
+    state.activeId = state.stocks[Math.min(i, state.stocks.length - 1)].id;
+    saveState();
+    render();
+  });
+
+  // ---------- Stock directory ----------
+  var directory = { status: "loading", popular: 0, list: [], names: [] };
+
+  function loadDirectory() {
+    fetch("stocks.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.stocks)) throw new Error("Invalid directory");
+        var list = data.stocks.filter(function (e) {
+          return Array.isArray(e) && typeof e[0] === "string" && typeof e[1] === "string";
+        });
+        directory.list = list;
+        directory.names = list.map(function (e) { return e[1].toLowerCase(); });
+        directory.popular = Math.min(Number(data.popular) || 0, list.length);
+        directory.status = "ready";
+      })
+      .catch(function () { directory.status = "error"; })
+      .then(function () { if (picker.open) updateOptions(); });
+  }
+
+  function searchDirectory(query) {
+    var list = directory.list;
+    var P = directory.popular;
+    if (!query) return list.slice(0, Math.min(P, 30)).map(function (e) { return { sym: e[0], name: e[1] }; });
+
+    var ql = query.toLowerCase();
+    var qu = query.toUpperCase();
+    var hits = [];
+    for (var i = 0; i < list.length; i++) {
+      var sym = list[i][0];
+      var name = directory.names[i];
+      var tier;
+      if (sym === qu) tier = 0;
+      else if (sym.indexOf(qu) === 0) tier = 1;
+      else if (name.indexOf(ql) === 0) tier = 2;
+      else if (name.indexOf(" " + ql) !== -1) tier = 3;
+      else continue;
+      hits.push({ tier: tier, pop: i < P ? i : P, len: tier <= 1 ? sym.length : 0, i: i });
+    }
+    hits.sort(function (a, b) {
+      return a.tier - b.tier || a.pop - b.pop || a.len - b.len || a.i - b.i;
+    });
+    return hits.slice(0, MAX_RESULTS).map(function (h) {
+      return { sym: list[h.i][0], name: list[h.i][1] };
+    });
+  }
+
+  // ---------- Stock picker ----------
+  var pickerMode = "add";
+  var results = [];
+  var activeIndex = -1;
+
+  function updateOptions() {
+    var query = qEl.value.trim();
+    var qu = query.toUpperCase();
+    results = directory.status === "ready" ? searchDirectory(query) : [];
+
+    var exact = results.some(function (r) { return r.sym === qu; });
+    if (query && TICKER_RE.test(qu) && !exact) {
+      results.push({ sym: qu, name: "", manual: true });
+    }
+
+    activeIndex = results.length ? 0 : -1;
+    optionsEl.innerHTML = results.map(function (r, i) {
+      var open = findByTicker(r.sym);
+      var name = r.manual ? (open ? open.name || "Already added" : "Add as a custom ticker") : r.name;
+      return '<li class="opt" role="option" id="opt-' + i + '" data-i="' + i + '" aria-selected="false">' +
+        '<span class="opt-sym">' + esc(r.sym) + '</span>' +
+        '<span class="opt-name">' + esc(name) + '</span>' +
+        (open ? '<span class="opt-tag">Open</span>' : "") +
+        "</li>";
+    }).join("");
+    highlight(activeIndex, false);
+
+    var note = "";
+    if (directory.status === "loading") note = "Loading stock directory…";
+    else if (directory.status === "error") note = "Stock directory unavailable. Type a ticker symbol to add it manually.";
+    else if (!query) note = "Popular stocks. Search by company name or ticker.";
+    else if (!results.length) note = "No matches. Type a ticker symbol to add it manually.";
+    noteEl.textContent = note;
+  }
+
+  function highlight(i, scroll) {
+    var prev = optionsEl.querySelector(".opt.active");
+    if (prev) { prev.classList.remove("active"); prev.setAttribute("aria-selected", "false"); }
+    activeIndex = i;
+    var el = i >= 0 ? optionsEl.querySelector('[data-i="' + i + '"]') : null;
+    if (el) {
+      el.classList.add("active");
+      el.setAttribute("aria-selected", "true");
+      qEl.setAttribute("aria-activedescendant", el.id);
+      if (scroll) el.scrollIntoView({ block: "nearest" });
+    } else {
+      qEl.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  function openPicker(mode) {
+    pickerMode = mode;
+    $("picker-title").textContent = mode === "assign" ? "Assign ticker" : "Add stock";
+    qEl.value = "";
+    updateOptions();
+    if (typeof picker.showModal === "function") picker.showModal();
+    else picker.setAttribute("open", "");
+    qEl.focus();
+  }
+
+  function closePicker() {
+    if (typeof picker.close === "function") picker.close();
+    else picker.removeAttribute("open");
+  }
+
+  function choose(item) {
+    if (!item) return;
+    var existing = findByTicker(item.sym);
+    var current = active();
+    closePicker();
+
+    if (existing) {
+      if (existing.id !== current.id) switchTo(existing.id);
+    } else if (pickerMode === "assign") {
+      current.ticker = item.sym;
+      if (item.name) current.name = item.name;
+      saveState();
+      render();
+    } else {
+      var s = makeStock(item.sym, item.name);
+      state.stocks.push(s);
+      state.activeId = s.id;
+      saveState();
+      render();
+      if (window.matchMedia("(pointer: fine)").matches) entryEl.focus();
+    }
+  }
+
+  addStockBtn.addEventListener("click", function () { openPicker("add"); });
+  assignBtn.addEventListener("click", function () { openPicker("assign"); });
+  $("picker-cancel").addEventListener("click", closePicker);
+
+  picker.addEventListener("click", function (e) {
+    if (e.target === picker) closePicker();
+  });
+
+  qEl.addEventListener("input", updateOptions);
+
+  qEl.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown" && results.length) {
+      e.preventDefault();
+      highlight((activeIndex + 1) % results.length, true);
+    } else if (e.key === "ArrowUp" && results.length) {
+      e.preventDefault();
+      highlight((activeIndex - 1 + results.length) % results.length, true);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0) choose(results[activeIndex]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closePicker();
+    }
+  });
+
+  optionsEl.addEventListener("mousemove", function (e) {
+    var li = e.target.closest(".opt");
+    if (li && Number(li.dataset.i) !== activeIndex) highlight(Number(li.dataset.i), false);
+  });
+
+  optionsEl.addEventListener("click", function (e) {
+    var li = e.target.closest(".opt");
+    if (li) choose(results[Number(li.dataset.i)]);
+  });
+
   // ---------- Init (never writes to storage) ----------
-  applyState(loadState() || DEFAULTS);
-  calculate();
+  state = loadV2();
+  if (!state) {
+    var restored = loadV1();
+    var first = makeStock("", "", restored || DEFAULTS);
+    state = { activeId: first.id, stocks: [first] };
+  }
+  render();
+  loadDirectory();
 })();
 </script>
 </body>
