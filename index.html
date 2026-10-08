@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Trade Calculator</title>
+<title>AVG Entry</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2315803d' d='M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z'/%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #eef1ec;
@@ -12,17 +13,16 @@
     --text: #16201b;
     --muted: #66736b;
     --line: #d5dcd4;
-    --seg: #e1e6df;
-    --seg-active: #fbfcfa;
+    --tab-active: rgba(22, 32, 27, 0.07);
     --elevated: #fbfcfa;
     --hover: rgba(22, 32, 27, 0.05);
-    --accent: #1f6f50;
-    --on-accent: #fbfcfa;
-    --ring: rgba(31, 111, 80, 0.22);
-    --up: #1a8a5a;
-    --down: #b4382c;
+    --accent: #15803d;
+    --ring: rgba(21, 128, 61, 0.22);
+    --up: #15803d;
+    --down: #dc2626;
+    --hero: #166534;
+    --on-hero: #ffffff;
     --backdrop: rgba(15, 21, 18, 0.28);
-    --lift: 0 1px 2px rgba(22, 32, 27, 0.08), 0 0 0 0.5px rgba(22, 32, 27, 0.06);
     --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
     color-scheme: light dark;
   }
@@ -34,17 +34,16 @@
       --text: #ededed;
       --muted: #a0a0a0;
       --line: #353535;
-      --seg: #262626;
-      --seg-active: #383838;
+      --tab-active: rgba(255, 255, 255, 0.09);
       --elevated: #262626;
       --hover: #303030;
-      --accent: #4cc38a;
-      --on-accent: #0f1512;
-      --ring: rgba(76, 195, 138, 0.3);
-      --up: #4cc38a;
-      --down: #ff7a6b;
+      --accent: #4ade80;
+      --ring: rgba(74, 222, 128, 0.3);
+      --up: #4ade80;
+      --down: #f87171;
+      --hero: #166534;
+      --on-hero: #ffffff;
       --backdrop: rgba(0, 0, 0, 0.5);
-      --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
       --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
     }
   }
@@ -99,6 +98,15 @@
     font-size: 22px;
     margin: 0 0 2px;
     letter-spacing: -0.015em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo {
+    flex: none;
+    width: 24px;
+    height: 24px;
   }
 
   .subtitle {
@@ -183,16 +191,14 @@
   .switcher {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     min-width: 0;
+    margin-bottom: 12px;
   }
 
   .tabs {
     display: flex;
-    gap: 2px;
-    padding: 3px;
-    background: var(--seg);
-    border-radius: 11px;
+    gap: 4px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
@@ -215,32 +221,38 @@
     white-space: nowrap;
   }
 
-  .tab:hover { color: var(--text); }
+  .tab:hover { color: var(--text); background: var(--hover); }
 
   .tab[aria-selected="true"] {
-    background: var(--seg-active);
+    background: var(--tab-active);
     color: var(--text);
-    box-shadow: var(--lift);
+  }
+
+  .tab:focus-visible,
+  .add-stock:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent);
   }
 
   .tab.untitled { font-weight: 500; font-style: italic; }
 
   .add-stock {
     flex: none;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--elevated);
-    color: var(--accent);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
     font-size: 21px;
+    font-weight: 400;
     line-height: 1;
     display: grid;
     place-items: center;
     padding: 0 0 2px;
   }
 
-  .add-stock:hover { border-color: var(--accent); }
+  .add-stock:hover { color: var(--accent); background: var(--hover); }
 
   @media (max-width: 599px) {
     .ticker-menu { display: block; }
@@ -450,8 +462,8 @@
   .add:hover { border-color: var(--accent); background: var(--hover); }
 
   .hero {
-    background: var(--accent);
-    color: var(--on-accent);
+    background: var(--hero);
+    color: var(--on-hero);
     border-radius: 14px;
     padding: 16px 18px;
     margin-bottom: 12px;
@@ -619,8 +631,8 @@
   <div class="topbar">
     <header class="masthead">
       <div class="brand">
-        <h1>Trade Calculator</h1>
-        <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
+        <h1><svg class="logo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z"/></svg>AVG Entry</h1>
+        <p class="subtitle">Plan trades. Know your average.</p>
       </div>
       <div class="ticker-menu">
         <select id="ticker-select" aria-label="Current stock"></select>
@@ -959,7 +971,7 @@
     tickerEl.classList.toggle("untitled", !s.ticker);
     assignBtn.hidden = !!s.ticker;
     nameEl.value = s.name;
-    document.title = s.ticker ? s.ticker + " · Trade Calculator" : "Trade Calculator";
+    document.title = s.ticker ? s.ticker + " · AVG Entry" : "AVG Entry";
 
     entryEl.value = s.entry;
     exitEl.value = s.exit;
