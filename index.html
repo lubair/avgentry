@@ -13,6 +13,8 @@
     --muted: #66736b;
     --line: #d5dcd4;
     --seg: #e1e6df;
+    --seg-active: #fbfcfa;
+    --elevated: #fbfcfa;
     --hover: rgba(22, 32, 27, 0.05);
     --accent: #1f6f50;
     --on-accent: #fbfcfa;
@@ -26,14 +28,16 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f1512;
-      --card: #171f1b;
-      --field: #121915;
-      --text: #e8eee9;
-      --muted: #8d9b93;
-      --line: #27312c;
-      --seg: #1d2621;
-      --hover: rgba(232, 238, 233, 0.06);
+      --bg: #181818;
+      --card: #1f1f1f;
+      --field: #252525;
+      --text: #ededed;
+      --muted: #a0a0a0;
+      --line: #353535;
+      --seg: #262626;
+      --seg-active: #383838;
+      --elevated: #262626;
+      --hover: #303030;
       --accent: #4cc38a;
       --on-accent: #0f1512;
       --ring: rgba(76, 195, 138, 0.3);
@@ -120,6 +124,62 @@
 
   .topbar header { margin-bottom: 32px; }
 
+  .masthead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .brand { min-width: 0; }
+
+  .ticker-menu {
+    position: relative;
+    flex: none;
+    display: none;
+    max-width: 44%;
+  }
+
+  .ticker-menu::after {
+    content: "";
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin-top: -5px;
+    border-right: 1.5px solid var(--muted);
+    border-bottom: 1.5px solid var(--muted);
+    transform: rotate(45deg);
+    pointer-events: none;
+  }
+
+  .ticker-menu select {
+    display: block;
+    max-width: 100%;
+    height: 36px;
+    padding: 0 32px 0 12px;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .ticker-menu select:hover { border-color: var(--muted); }
+
+  .ticker-menu select:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
   .switcher {
     display: flex;
     align-items: center;
@@ -158,7 +218,7 @@
   .tab:hover { color: var(--text); }
 
   .tab[aria-selected="true"] {
-    background: var(--card);
+    background: var(--seg-active);
     color: var(--text);
     box-shadow: var(--lift);
   }
@@ -171,7 +231,7 @@
     height: 34px;
     border-radius: 50%;
     border: 1px solid var(--line);
-    background: var(--card);
+    background: var(--elevated);
     color: var(--accent);
     font-size: 21px;
     line-height: 1;
@@ -182,8 +242,14 @@
 
   .add-stock:hover { border-color: var(--accent); }
 
+  @media (max-width: 599px) {
+    .ticker-menu { display: block; }
+    .switcher { display: none; }
+  }
+
   /* ---------- Stock header ---------- */
   .stock-head {
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -431,7 +497,7 @@
     padding: 0;
     border: 1px solid var(--line);
     border-radius: 16px;
-    background: var(--card);
+    background: var(--elevated);
     color: var(--text);
     box-shadow: var(--sheet);
   }
@@ -551,9 +617,14 @@
 <body>
 <div class="app">
   <div class="topbar">
-    <header>
-      <h1>Trade Calculator</h1>
-      <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
+    <header class="masthead">
+      <div class="brand">
+        <h1>Trade Calculator</h1>
+        <p class="subtitle">Plan an order, then see what averaging down does to your cost.</p>
+      </div>
+      <div class="ticker-menu">
+        <select id="ticker-select" aria-label="Current stock"></select>
+      </div>
     </header>
 
     <nav class="switcher" aria-label="Stocks">
@@ -662,6 +733,8 @@
   var buysEl = $("buys");
   var addBtn = $("add");
   var tabsEl = $("tabs");
+  var tickerSelect = $("ticker-select");
+  var ADD_OPTION = "__add";
   var addStockBtn = $("add-stock");
   var tickerEl = $("s-ticker");
   var nameEl = $("s-name");
@@ -846,6 +919,38 @@
     });
     var current = tabsEl.querySelector('[aria-selected="true"]');
     if (current) current.scrollIntoView({ block: "nearest", inline: "nearest" });
+    renderSelect();
+  }
+
+  function renderSelect() {
+    tickerSelect.innerHTML = "";
+    var group = document.createElement("optgroup");
+    group.label = "Your stocks";
+    state.stocks.forEach(function (s) {
+      var o = document.createElement("option");
+      o.value = s.id;
+      o.textContent = s.ticker || "Untitled";
+      group.appendChild(o);
+    });
+    tickerSelect.appendChild(group);
+    var add = document.createElement("option");
+    add.value = ADD_OPTION;
+    add.textContent = "Add stock…";
+    tickerSelect.appendChild(add);
+    tickerSelect.value = state.activeId;
+    fitSelect();
+  }
+
+  var measureCtx = document.createElement("canvas").getContext("2d");
+
+  function fitSelect() {
+    var cs = getComputedStyle(tickerSelect);
+    var option = tickerSelect.options[tickerSelect.selectedIndex];
+    if (!measureCtx || !option) return;
+    measureCtx.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+    var chrome = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) +
+      parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+    tickerSelect.style.width = Math.ceil(measureCtx.measureText(option.text).width + chrome + 2) + "px";
   }
 
   function renderStock() {
@@ -987,6 +1092,13 @@
   tabsEl.addEventListener("click", function (e) {
     var tab = e.target.closest(".tab");
     if (tab && tab.dataset.id !== state.activeId) switchTo(tab.dataset.id);
+  });
+
+  tickerSelect.addEventListener("change", function () {
+    var value = tickerSelect.value;
+    tickerSelect.value = state.activeId;
+    if (value === ADD_OPTION) openPicker("add");
+    else if (value !== state.activeId) switchTo(value);
   });
 
   tabsEl.addEventListener("keydown", function (e) {
