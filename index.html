@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AVG Entry</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2315803d' d='M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2321c28a' d='M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z'/%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #eef1ec;
@@ -16,13 +16,18 @@
     --tab-active: rgba(22, 32, 27, 0.07);
     --elevated: #fbfcfa;
     --hover: rgba(22, 32, 27, 0.05);
-    --accent: #15803d;
-    --ring: rgba(21, 128, 61, 0.22);
-    --up: #15803d;
+    --accent: #21c28a;
+    --accent-text: #0f7d57;
+    --ring: rgba(33, 194, 138, 0.28);
+    --up: var(--accent-text);
     --down: #dc2626;
     --down-soft: rgba(220, 38, 38, 0.08);
-    --hero: #166534;
-    --on-hero: #ffffff;
+    --hero: var(--accent);
+    --on-hero: #062a1c;
+    --s-pre: #e5a33d;
+    --s-after: #f07854;
+    --s-night: #9585f5;
+    --s-closed: #858585;
     --glass: rgba(251, 252, 250, 0.72);
     --glass-line: rgba(22, 32, 27, 0.1);
     --ghost-line: #e1e6df;
@@ -44,13 +49,12 @@
       --tab-active: rgba(255, 255, 255, 0.09);
       --elevated: #262626;
       --hover: #303030;
-      --accent: #4ade80;
-      --ring: rgba(74, 222, 128, 0.3);
-      --up: #4ade80;
+      --accent: #21bd79;
+      --accent-text: #21bd79;
+      --ring: rgba(33, 189, 121, 0.32);
       --down: #f87171;
       --down-soft: rgba(248, 113, 113, 0.12);
-      --hero: #166534;
-      --on-hero: #ffffff;
+      --on-hero: #062a1c;
       --glass: rgba(38, 38, 38, 0.72);
       --glass-line: rgba(255, 255, 255, 0.09);
       --ghost-line: #2b2b2b;
@@ -110,7 +114,7 @@
 
   h1 {
     font-size: 22px;
-    margin: 0 0 2px;
+    margin: 0;
     letter-spacing: -0.015em;
     display: flex;
     align-items: center;
@@ -159,6 +163,85 @@
   }
 
   .brand { min-width: 0; }
+
+  .title-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  /* ---------- Market session ---------- */
+  .session-dot {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: default;
+  }
+
+  .session-dot::after {
+    content: "";
+    position: absolute;
+    inset: -10px -11px;
+  }
+
+  .session-dot span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--s-closed);
+  }
+
+  .session-dot[data-s="regular"] span { background: var(--accent); }
+  .session-dot[data-s="pre"] span { background: var(--s-pre); }
+  .session-dot[data-s="after"] span { background: var(--s-after); }
+  .session-dot[data-s="overnight"] span { background: var(--s-night); }
+
+  .session-dot:focus-visible { outline-offset: -4px; }
+
+  .session-tip {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 6px);
+    z-index: 7;
+    width: max-content;
+    max-width: min(240px, calc((100vw - 32px) * 0.56 - 12px));
+    padding: 6px 10px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--muted);
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    pointer-events: none;
+  }
+
+  .session-tip > b,
+  .session-tip > span { display: block; }
+  .session-tip b { font-weight: 600; color: var(--text); }
+  .session-tip .nw { white-space: nowrap; }
+
+  .session.open .session-tip,
+  .session-dot:focus-visible + .session-tip { display: block; }
+
+  @media (hover: hover) {
+    .session:hover .session-tip { display: block; }
+  }
+
+  .session.hush .session-tip { display: none; }
+
+  @media (min-width: 600px) {
+    .session { position: relative; }
+    .session-tip { left: 50%; transform: translateX(-50%); max-width: 240px; }
+  }
 
   .ticker-menu {
     position: relative;
@@ -271,7 +354,7 @@
     padding: 0 0 2px;
   }
 
-  .add-stock:hover { color: var(--accent); background: var(--hover); }
+  .add-stock:hover { color: var(--accent-text); background: var(--hover); }
 
   @media (max-width: 599px) {
     .ticker-menu { display: block; }
@@ -326,7 +409,7 @@
   .text-btn {
     border: 0;
     background: transparent;
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 15px;
     padding: 7px 10px;
     border-radius: 8px;
@@ -498,7 +581,7 @@
   .add {
     width: 100%;
     font-size: 15px;
-    color: var(--accent);
+    color: var(--accent-text);
     background: transparent;
     border: 1px dashed var(--line);
     border-radius: 12px;
@@ -782,7 +865,7 @@
     flex: none;
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     border: 1px solid var(--line);
     border-radius: 999px;
     padding: 1px 8px;
@@ -836,7 +919,13 @@
   <div class="topbar">
     <header class="masthead">
       <div class="brand">
-        <h1><svg class="logo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z"/></svg>AVG Entry</h1>
+        <div class="title-row">
+          <h1><svg class="logo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z"/></svg>AVG Entry</h1>
+          <span class="session" id="session">
+            <button class="session-dot" id="session-dot" type="button" aria-describedby="session-tip" aria-label="US market status"><span></span></button>
+            <span class="session-tip" id="session-tip" role="tooltip"></span>
+          </span>
+        </div>
         <p class="subtitle">Plan trades. Know your average.</p>
       </div>
       <div class="ticker-menu">
@@ -902,7 +991,7 @@
 
       <section class="card buys-card" aria-labelledby="buys-title">
         <h2 id="buys-title">Additional buys</h2>
-        <p class="note">If the price drops, add a buy at the lower price. Add as many as you like.</p>
+        <p class="note">Buy lower to reduce your average cost.</p>
         <ul class="buys" id="buys"></ul>
         <button type="button" class="add" id="add">Add another buy</button>
       </section>
@@ -948,7 +1037,7 @@
 
       <section class="card">
         <h2>Additional buys</h2>
-        <p class="note">If the price drops, add a buy at the lower price. Add as many as you like.</p>
+        <p class="note">Buy lower to reduce your average cost.</p>
         <ul class="buys">
           <li class="buy">
             <div><label>Buy price ($)</label><div class="g-field"></div></div>
@@ -1664,6 +1753,136 @@
     if (e.target === picker) closePicker();
   });
 
+  // ---------- Market session ----------
+  // Published NYSE calendar (nyse.com/markets/hours-calendars). Early closes end
+  // regular trading at 1 PM ET and late trading at 5 PM ET.
+  var MARKET_CAL = {
+    2026: { holidays: ["01-01", "01-19", "02-16", "04-03", "05-25", "06-19", "07-03", "09-07", "11-26", "12-25"], early: ["11-27", "12-24"] },
+    2027: { holidays: ["01-01", "01-18", "02-15", "03-26", "05-31", "06-18", "07-05", "09-06", "11-25", "12-24"], early: ["11-26"] },
+    2028: { holidays: ["01-17", "02-21", "04-14", "05-29", "06-19", "07-04", "09-04", "11-23", "12-25"], early: ["07-03", "11-24"] }
+  };
+
+  var SESSION_TEXT = {
+    regular: ["Market open", "Regular trading · 9:30 AM–4 PM ET"],
+    pre: ["Pre-market", "Early trading · 4–9:30 AM ET"],
+    after: ["After-hours", "Extended trading · 4–8 PM ET"],
+    overnight: ["Overnight", "Overnight trading · 8 PM–4 AM ET", "Selected venues only"],
+    closed: ["US market closed"],
+    unknown: ["Schedule unavailable", "No published calendar for this date"]
+  };
+
+  var etFormat = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  });
+
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+  function tradingDay(y, m, d) {
+    var date = new Date(Date.UTC(y, m - 1, d));
+    var dow = date.getUTCDay();
+    if (dow === 0 || dow === 6) return { known: true, open: false };
+    var cal = MARKET_CAL[date.getUTCFullYear()];
+    if (!cal) return { known: false, open: false };
+    var key = pad2(date.getUTCMonth() + 1) + "-" + pad2(date.getUTCDate());
+    if (cal.holidays.indexOf(key) >= 0) return { known: true, open: false, holiday: true };
+    return { known: true, open: true, early: cal.early.indexOf(key) >= 0 };
+  }
+
+  function marketSession(now) {
+    var p = {};
+    etFormat.formatToParts(now).forEach(function (x) { p[x.type] = x.value; });
+    var y = +p.year, m = +p.month, d = +p.day;
+    var min = (+p.hour % 24) * 60 + +p.minute;
+    var today = tradingDay(y, m, d);
+
+    if (min >= 1200) {
+      var next = tradingDay(y, m, d + 1);
+      if (next.open) return { s: "overnight" };
+      if (!next.known) return { s: "unknown" };
+    }
+    if (!today.known) return { s: "unknown" };
+    if (min < 240) return { s: today.open ? "overnight" : "closed", holiday: today.holiday };
+    if (!today.open) return { s: "closed", holiday: today.holiday };
+
+    var close = today.early ? 780 : 960;
+    if (min < 570) return { s: "pre" };
+    if (min < close) return { s: "regular", early: today.early };
+    if (min < close + 240) return { s: "after", early: today.early };
+    return { s: "closed", early: today.early };
+  }
+
+  var sessionEl = $("session");
+  var sessionDot = $("session-dot");
+  var sessionTip = $("session-tip");
+  var sessionTimer = 0;
+
+  function renderSession() {
+    var info = marketSession(new Date());
+    var lines = SESSION_TEXT[info.s].slice();
+    if (info.early) {
+      if (info.s === "regular") lines = ["Market open", "Regular trading · 9:30 AM–1 PM ET", "Early close today"];
+      else if (info.s === "after") lines[1] = "Extended trading · 1–5 PM ET";
+      else lines.push("Early close today");
+    } else if (info.holiday) {
+      lines.push("Market holiday");
+    }
+    sessionDot.setAttribute("data-s", info.s);
+    sessionDot.setAttribute("aria-label", "US market status: " + lines[0]);
+    sessionTip.textContent = "";
+    lines.forEach(function (text, i) {
+      var el = document.createElement(i ? "span" : "b");
+      var cut = text.indexOf(" · ");
+      if (cut < 0) {
+        el.textContent = text;
+      } else {
+        var hours = document.createElement("span");
+        hours.className = "nw";
+        hours.textContent = text.slice(cut + 3);
+        el.appendChild(document.createTextNode(text.slice(0, cut + 3)));
+        el.appendChild(hours);
+      }
+      sessionTip.appendChild(el);
+    });
+  }
+
+  function tickSession() {
+    clearTimeout(sessionTimer);
+    sessionTimer = 0;
+    renderSession();
+    if (!document.hidden) sessionTimer = setTimeout(tickSession, 60000 - (Date.now() % 60000) + 250);
+  }
+
+  document.addEventListener("visibilitychange", tickSession);
+  window.addEventListener("focus", tickSession);
+  window.addEventListener("pageshow", tickSession);
+
+  var sessionPointer = "";
+  sessionDot.addEventListener("pointerdown", function (e) { sessionPointer = e.pointerType; });
+  sessionDot.addEventListener("click", function () {
+    if (sessionPointer && sessionPointer !== "mouse") {
+      var menu = tickerSelect.parentNode.getBoundingClientRect();
+      sessionTip.style.maxWidth = menu.width
+        ? Math.max(160, menu.left - sessionEl.parentNode.getBoundingClientRect().left - 10) + "px"
+        : "";
+      sessionEl.classList.toggle("open");
+    }
+    sessionPointer = "";
+  });
+  sessionDot.addEventListener("blur", function () { sessionEl.classList.remove("open", "hush"); });
+  sessionEl.addEventListener("mouseleave", function () { sessionEl.classList.remove("hush"); });
+  document.addEventListener("pointerdown", function (e) {
+    if (!sessionEl.contains(e.target)) sessionEl.classList.remove("open");
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (sessionEl.classList.contains("open") || document.activeElement === sessionDot || sessionEl.matches(":hover")) {
+      sessionEl.classList.remove("open");
+      sessionEl.classList.add("hush");
+    }
+  });
+
   // ---------- Init (never writes to storage) ----------
   state = loadV2();
   if (!state) {
@@ -1674,6 +1893,7 @@
       : { activeId: null, stocks: [] };
   }
   render();
+  tickSession();
   loadDirectory();
 })();
 </script>
