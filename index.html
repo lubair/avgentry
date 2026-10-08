@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trade Calculator</title>
+<style>
+  :root {
+    --bg: #eef1ec;
+    --card: #fbfcfa;
+    --text: #16201b;
+    --muted: #66736b;
+    --line: #d5dcd4;
+    --accent: #1f6f50;
+    --on-accent: #fbfcfa;
+    --up: #1a8a5a;
+    --down: #b4382c;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1512;
+      --card: #171f1b;
+      --text: #e8eee9;
+      --muted: #8d9b93;
+      --line: #27312c;
+      --accent: #4cc38a;
+      --on-accent: #0f1512;
+      --up: #4cc38a;
+      --down: #ff7a6b;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+  }
+
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding:
+      calc(24px + env(safe-area-inset-top))
+      calc(16px + env(safe-area-inset-right))
+      calc(32px + env(safe-area-inset-bottom))
+      calc(16px + env(safe-area-inset-left));
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+
+  h2 {
+    font-size: 16px;
+    margin: 0 0 12px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .note {
+    color: var(--muted);
+    font-size: 14px;
+    margin: -4px 0 14px;
+  }
+
+  .inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  input {
+    width: 100%;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+    min-width: 0;
+  }
+
+  input:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .results {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .results.six { grid-template-columns: repeat(3, 1fr); }
+
+  .cell {
+    background: var(--card);
+    padding: 10px 12px;
+    min-width: 0;
+  }
+
+  .cell span {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .cell output {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+
+  .buys {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .buy {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .remove {
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    width: 40px;
+    height: 41px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .remove:hover { color: var(--down); }
+
+  .add {
+    width: 100%;
+    font: inherit;
+    font-size: 15px;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+
+  .add:hover { border-color: var(--accent); }
+
+  .hero {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    opacity: 0.85;
+  }
+
+  .hero-value {
+    display: block;
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    opacity: 0.85;
+  }
+
+  @media (max-width: 419px) {
+    .inputs { grid-template-columns: 1fr; }
+    .results.six { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Trade Calculator</h1>
+
+  <section class="card" aria-labelledby="order-title">
+    <h2 id="order-title">Your order</h2>
+    <div class="inputs">
+      <div>
+        <label for="entry">Entry price ($)</label>
+        <input id="entry" type="number" inputmode="decimal" step="any" autocomplete="off" value="18">
+      </div>
+      <div>
+        <label for="exit">Exit price ($)</label>
+        <input id="exit" type="number" inputmode="decimal" step="any" autocomplete="off" value="22">
+      </div>
+      <div>
+        <label for="invested">Invested ($)</label>
+        <input id="invested" type="number" inputmode="decimal" step="any" autocomplete="off" value="1000">
+      </div>
+    </div>
+    <div class="results" aria-live="polite">
+      <div class="cell"><span>Shares</span><output id="o-shares">—</output></div>
+      <div class="cell"><span>Value at exit</span><output id="o-value">—</output></div>
+      <div class="cell"><span>Profit / loss</span><output id="o-pl">—</output></div>
+      <div class="cell"><span>Return</span><output id="o-ret">—</output></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="avg-title">
+    <h2 id="avg-title">Average cost</h2>
+    <p class="note">If the price drops, add a buy at the lower price. Add as many as you like.</p>
+    <ul class="buys" id="buys"></ul>
+    <button type="button" class="add" id="add">Add another buy</button>
+
+    <div class="hero" aria-live="polite">
+      <div class="hero-label">New average cost</div>
+      <output class="hero-value" id="a-avg">—</output>
+      <div class="hero-sub" id="a-sub">—</div>
+    </div>
+
+    <div class="results six" aria-live="polite">
+      <div class="cell"><span>Total invested</span><output id="a-invested">—</output></div>
+      <div class="cell"><span>Total shares</span><output id="a-shares">—</output></div>
+      <div class="cell"><span>Break-even price</span><output id="a-be">—</output></div>
+      <div class="cell"><span>Value at exit</span><output id="a-value">—</output></div>
+      <div class="cell"><span>Profit / loss</span><output id="a-pl">—</output></div>
+      <div class="cell"><span>Return</span><output id="a-ret">—</output></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "trade-calculator-v1";
+  var DEFAULTS = {
+    entry: "18",
+    exit: "22",
+    invested: "1000",
+    buys: [{ price: "16", amount: "1000" }]
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var entryEl = $("entry");
+  var exitEl = $("exit");
+  var investedEl = $("invested");
+  var buysEl = $("buys");
+  var addBtn = $("add");
+
+  // ---------- Formatting ----------
+  var DASH = "—";
+  var upTo4Fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+
+  function isNum(n) { return typeof n === "number" && isFinite(n); }
+  function fmtMoney(n) { return isNum(n) ? n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }) : DASH; }
+  function fmtPrice(n) {
+    if (!isNum(n)) return DASH;
+    var s = upTo4Fmt.format(Math.abs(n));
+    return (n < 0 && s !== "0" ? "-$" : "$") + s;
+  }
+  function fmtShares(n) { return isNum(n) ? upTo4Fmt.format(n) : DASH; }
+  function fmtPct(n) {
+    if (!isNum(n)) return DASH;
+    var r = Math.round(n * 100) / 100;
+    if (r === 0) r = 0;
+    return (r > 0 ? "+" : r < 0 ? "-" : "+") + Math.abs(r).toFixed(2) + "%";
+  }
+
+  function parse(raw) {
+    if (typeof raw !== "string" || raw.trim() === "") return NaN;
+    var n = Number(raw);
+    return isFinite(n) ? n : NaN;
+  }
+
+  function setOut(el, text, signValue) {
+    el.textContent = text;
+    el.classList.remove("up", "down");
+    if (signValue !== undefined && isNum(signValue) && text !== DASH) {
+      if (signValue > 0) el.classList.add("up");
+      else if (signValue < 0) el.classList.add("down");
+    }
+  }
+
+  // ---------- Rows ----------
+  var rowSeq = 0;
+
+  function createRow(price, amount) {
+    rowSeq += 1;
+    var id = rowSeq;
+    var li = document.createElement("li");
+    li.className = "buy";
+    li.innerHTML =
+      '<div><label for="bp' + id + '">Buy price ($)</label>' +
+      '<input id="bp' + id + '" class="b-price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
+      '<div><label for="ba' + id + '">Amount ($)</label>' +
+      '<input id="ba' + id + '" class="b-amount" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
+      '<button type="button" class="remove" aria-label="Remove this buy">×</button>';
+    li.querySelector(".b-price").value = price;
+    li.querySelector(".b-amount").value = amount;
+    buysEl.appendChild(li);
+    return li;
+  }
+
+  // ---------- State ----------
+  function readState() {
+    var buys = [];
+    var rows = buysEl.querySelectorAll(".buy");
+    for (var i = 0; i < rows.length; i++) {
+      buys.push({
+        price: rows[i].querySelector(".b-price").value,
+        amount: rows[i].querySelector(".b-amount").value
+      });
+    }
+    return { entry: entryEl.value, exit: exitEl.value, invested: investedEl.value, buys: buys };
+  }
+
+  function saveState() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(readState()));
+    } catch (e) { /* storage unavailable or full */ }
+  }
+
+  function loadState() {
+    var raw;
+    try {
+      raw = window.localStorage.getItem(STORAGE_KEY);
+    } catch (e) { return null; }
+    if (raw === null) return null;
+    try {
+      var data = JSON.parse(raw);
+      if (!data || typeof data !== "object" || !Array.isArray(data.buys)) return null;
+      var str = function (v, fallback) { return typeof v === "string" ? v : fallback; };
+      var buys = [];
+      for (var i = 0; i < data.buys.length; i++) {
+        var b = data.buys[i];
+        if (!b || typeof b !== "object") continue;
+        buys.push({ price: str(b.price, ""), amount: str(b.amount, "") });
+      }
+      return {
+        entry: str(data.entry, DEFAULTS.entry),
+        exit: str(data.exit, DEFAULTS.exit),
+        invested: str(data.invested, DEFAULTS.invested),
+        buys: buys
+      };
+    } catch (e) { return null; }
+  }
+
+  function applyState(s) {
+    entryEl.value = s.entry;
+    exitEl.value = s.exit;
+    investedEl.value = s.invested;
+    buysEl.innerHTML = "";
+    for (var i = 0; i < s.buys.length; i++) createRow(s.buys[i].price, s.buys[i].amount);
+  }
+
+  // ---------- Calculation ----------
+  function calculate() {
+    var entry = parse(entryEl.value);
+    var exit = parse(exitEl.value);
+    var invested = parse(investedEl.value);
+
+    var orderValid = entry > 0 && invested > 0;
+    var exitValid = exit >= 0;
+
+    // Section 1
+    var shares = orderValid ? invested / entry : NaN;
+    var value = orderValid && exitValid ? shares * exit : NaN;
+    var pl = value - invested;
+    var ret = pl / invested * 100;
+
+    setOut($("o-shares"), fmtShares(shares));
+    setOut($("o-value"), fmtMoney(value));
+    setOut($("o-pl"), fmtMoney(pl), pl);
+    setOut($("o-ret"), fmtPct(ret), ret);
+
+    // Section 2 — the original order counts as the first buy
+    var totalShares = orderValid ? shares : 0;
+    var totalInvested = orderValid ? invested : 0;
+    var rows = buysEl.querySelectorAll(".buy");
+    for (var i = 0; i < rows.length; i++) {
+      var p = parse(rows[i].querySelector(".b-price").value);
+      var a = parse(rows[i].querySelector(".b-amount").value);
+      if (p > 0 && a > 0) {
+        totalShares += a / p;
+        totalInvested += a;
+      }
+    }
+
+    var hasPosition = totalShares > 0 && totalInvested > 0;
+    if (!hasPosition) { totalShares = NaN; totalInvested = NaN; }
+
+    var avg = totalInvested / totalShares;
+    var drop = entry > 0 ? (avg - entry) / entry * 100 : NaN;
+    var tValue = exitValid ? totalShares * exit : NaN;
+    var tPl = tValue - totalInvested;
+    var tRet = tPl / totalInvested * 100;
+
+    setOut($("a-avg"), fmtPrice(avg));
+    $("a-sub").textContent = "Was " + fmtPrice(entry > 0 ? entry : NaN) + " · " + fmtPct(drop) + " vs your entry";
+    setOut($("a-invested"), fmtMoney(totalInvested));
+    setOut($("a-shares"), fmtShares(totalShares));
+    setOut($("a-be"), fmtPrice(avg));
+    setOut($("a-value"), fmtMoney(tValue));
+    setOut($("a-pl"), fmtMoney(tPl), tPl);
+    setOut($("a-ret"), fmtPct(tRet), tRet);
+  }
+
+  // ---------- Events ----------
+  function onChange() {
+    calculate();
+    saveState();
+  }
+
+  entryEl.addEventListener("input", onChange);
+  exitEl.addEventListener("input", onChange);
+  investedEl.addEventListener("input", onChange);
+  buysEl.addEventListener("input", onChange);
+
+  buysEl.addEventListener("click", function (e) {
+    var btn = e.target.closest(".remove");
+    if (!btn) return;
+    var li = btn.closest(".buy");
+    var next = li.nextElementSibling || li.previousElementSibling;
+    li.remove();
+    onChange();
+    (next ? next.querySelector(".b-price") : addBtn).focus();
+  });
+
+  addBtn.addEventListener("click", function () {
+    var li = createRow("", "");
+    onChange();
+    li.querySelector(".b-price").focus();
+  });
+
+  // ---------- Init (never writes to storage) ----------
+  applyState(loadState() || DEFAULTS);
+  calculate();
+})();
+</script>
+</body>
+</html>
