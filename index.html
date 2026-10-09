@@ -467,10 +467,37 @@
 
   .trash-btn:focus-visible { outline-color: var(--down); }
 
+  .stock-actions {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .hist-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    margin: -6px 0;
+    padding: 0 12px 0 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .hist-btn svg { display: block; flex: none; }
+
+  .hist-btn:hover { color: var(--text); background: var(--hover); }
+
   @media (max-width: 599px) {
     .stock-head { align-items: flex-start; }
     .stock-name { flex-basis: 100%; }
-    .trash-btn { margin-top: calc(var(--ticker-size) * 0.6 - 22px); }
+    .trash-btn,
+    .hist-btn { margin-top: calc(var(--ticker-size) * 0.6 - 22px); }
   }
 
   /* ---------- Cards ---------- */
@@ -1026,6 +1053,286 @@
 
   .picker-note:empty { display: none; }
 
+  /* ---------- History ---------- */
+  .history-dlg { width: min(560px, calc(100% - 24px)); }
+
+  .hist {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hist .picker-head h2 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    padding: 2px;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .seg button {
+    min-height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .seg button[aria-selected="true"] {
+    background: var(--tab-active);
+    color: var(--text);
+  }
+
+  .seg button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .hist-body {
+    max-height: min(560px, calc(100vh - 9vh - 150px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+
+  .hist-body [role="tabpanel"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+
+  .hist-note {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .hist-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hist-item {
+    padding: 12px 2px;
+    border-top: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hist-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .hist-num { color: var(--muted); font-size: 14px; }
+
+  .hist-title {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .hist-tag {
+    flex: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+
+  .hist-line {
+    margin-top: 2px;
+    font-size: 14px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .hist-line.up { color: var(--up); }
+  .hist-line.down { color: var(--down); }
+
+  .hist-when {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .hist-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 4px 0 -6px;
+  }
+
+  .hist-foot .text-btn { margin-right: -6px; }
+
+  .hist-current {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 7px 4px 7px 0;
+  }
+
+  .hist-item details { margin-top: 2px; }
+
+  .hist-item summary {
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 2px 0;
+  }
+
+  .hist-change { margin-top: 6px; font-size: 14px; }
+
+  .hist-change .hist-line { margin-top: 0; }
+
+  .hist-trim { margin: 0 -4px 8px; }
+
+  /* ---------- Confirmations ---------- */
+  .ask-dlg {
+    width: min(380px, calc(100% - 24px));
+    margin-top: max(12px, 18vh);
+  }
+
+  .ask { padding: 18px; }
+
+  .ask h2 { margin: 0 0 6px; }
+
+  .ask p {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .ask-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ask-btn {
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .ask-btn:hover { background: var(--hover); }
+
+  .ask-btn.primary {
+    border-color: transparent;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+  }
+
+  .ask-btn.primary:hover { background: var(--cta-hover); }
+
+  .ask-btn.danger { color: var(--down); }
+
+  /* ---------- Unsaved changes ---------- */
+  .edit-space { height: 0; }
+
+  body.editing .edit-space { height: 80px; }
+
+  .edit-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 5px 5px 5px 16px;
+    border: 1px solid var(--glass-line);
+    border-radius: 999px;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .edit-bar.shown {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* Out of the way while the on-screen keyboard is up. */
+  body.typing .edit-bar.shown {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .edit-msg {
+    min-width: 0;
+    margin-right: 8px;
+    font-size: 15px;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  .edit-msg.error { color: var(--down); white-space: normal; }
+
+  .edit-bar:has(.edit-msg.error) { border-radius: 24px; }
+
+  .edit-bar button {
+    flex: none;
+    min-height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .edit-cancel { background: transparent; color: var(--text); }
+
+  .edit-cancel:hover { background: var(--hover); }
+
+  .edit-save { background: var(--cta-bg); color: var(--cta-fg); }
+
+  .edit-save:hover { background: var(--cta-hover); }
+
+  @media (pointer: coarse) {
+    .edit-bar { padding: 4px 4px 4px 16px; }
+    .edit-bar button { min-height: 44px; }
+    .seg button { min-height: 38px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .edit-bar, .edit-bar.shown, body.typing .edit-bar.shown { transition: none; }
+  }
+
   @media (pointer: coarse) {
     .tab { padding: 9px 16px; }
     .add-stock { width: 40px; height: 40px; }
@@ -1105,9 +1412,14 @@
       <button type="button" class="text-btn" id="s-assign" hidden>Assign ticker</button>
       <span class="stock-name" id="s-name"></span>
     </div>
-    <button type="button" class="trash-btn" id="s-remove" aria-label="Remove stock" title="Remove stock">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M10 3h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>
-    </button>
+    <div class="stock-actions">
+      <button type="button" class="hist-btn" id="s-history" aria-haspopup="dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6l-2.5 2.5"/><path d="M3.5 4v4.5H8"/><path d="M12 7.5V12l3 2"/></svg>History
+      </button>
+      <button type="button" class="trash-btn" id="s-remove" aria-label="Remove stock" title="Remove stock">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M10 3h4M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>
+      </button>
+    </div>
   </div>
 
   <main class="workspace">
@@ -1238,6 +1550,7 @@
   </div>
 </div>
 
+<div class="edit-space" aria-hidden="true"></div>
 <div class="scroll-end" id="scroll-end" aria-hidden="true"></div>
 <div class="pblur" id="pblur" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 
@@ -1259,13 +1572,45 @@
   </div>
 </dialog>
 
+<dialog id="history" class="history-dlg" aria-labelledby="history-title">
+  <div class="hist">
+    <div class="picker-head">
+      <h2 id="history-title">History</h2>
+      <button type="button" class="text-btn" id="history-done">Done</button>
+    </div>
+    <div class="seg" role="tablist" aria-label="History views">
+      <button type="button" role="tab" id="tab-tx" aria-controls="panel-tx" aria-selected="true">Transactions</button>
+      <button type="button" role="tab" id="tab-edits" aria-controls="panel-edits" aria-selected="false" tabindex="-1">Edit history</button>
+    </div>
+    <div class="hist-body">
+      <div role="tabpanel" id="panel-tx" aria-labelledby="tab-tx" tabindex="0"></div>
+      <div role="tabpanel" id="panel-edits" aria-labelledby="tab-edits" tabindex="0" hidden></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="ask" class="ask-dlg" aria-labelledby="ask-title" aria-describedby="ask-text">
+  <div class="ask">
+    <h2 id="ask-title"></h2>
+    <p id="ask-text"></p>
+    <div class="ask-actions" id="ask-actions"></div>
+  </div>
+</dialog>
+
+<div class="edit-bar" id="edit-bar" role="region" aria-label="Unsaved changes">
+  <span class="edit-msg" id="edit-msg" role="status"></span>
+  <button type="button" class="edit-cancel" id="edit-cancel">Cancel</button>
+  <button type="button" class="edit-save" id="edit-save">Save</button>
+</div>
+
 <script>
 (function () {
   "use strict";
 
   var STORAGE_V1 = "trade-calculator-v1";
   var STORAGE_V2 = "trade-calculator-v2";
-  var STORAGE_KEY = "trade-calculator-v3";
+  var STORAGE_V3 = "trade-calculator-v3";
+  var STORAGE_KEY = "trade-calculator-v4";
   var DEFAULTS = {
     entry: "18",
     exit: "22",
@@ -1425,23 +1770,27 @@
       if (!b || typeof b !== "object") continue;
       var row = { id: str(b.id, ""), seq: b.seq };
       keys.forEach(function (k) { row[k] = str(b[k], ""); });
+      if (isNum(b.at)) row.at = b.at;
       rows.push(row);
     }
     return rows;
   }
 
-  function readJSON(key) {
-    var raw;
-    try {
-      raw = window.localStorage.getItem(key);
-    } catch (e) { return null; }
+  function readRaw(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function parseJSON(raw) {
     if (raw === null) return null;
     try { return JSON.parse(raw); } catch (e) { return null; }
   }
 
-  // Reads v3, or v2 (the same shape without sales or transaction order).
-  function loadStocks(key) {
-    var data = readJSON(key);
+  function readJSON(key) { return parseJSON(readRaw(key)); }
+
+  // Reads v4, v3 (no edit history) or v2 (no sales or transaction order).
+  function loadStocks(key) { return parseState(readJSON(key)); }
+
+  function parseState(data) {
     if (!data || typeof data !== "object" || !Array.isArray(data.stocks)) return null;
     var stocks = [];
     var seen = {};
@@ -1462,9 +1811,27 @@
       }));
     }
     if (stocks.length === 1 && isBlank(stocks[0])) stocks = [];
-    if (!stocks.length) return { activeId: null, stocks: [] };
+    var history = {};
+    stocks.forEach(function (s) {
+      var h = readHistory(data.history && data.history[s.id]);
+      if (h) history[s.id] = h;
+    });
+    if (!stocks.length) return { activeId: null, stocks: [], history: history };
     var activeId = stocks.some(function (s) { return s.id === data.activeId; }) ? data.activeId : stocks[0].id;
-    return { activeId: activeId, stocks: stocks };
+    return { activeId: activeId, stocks: stocks, history: history };
+  }
+
+  function readHistory(h) {
+    if (!h || typeof h !== "object" || !Array.isArray(h.entries)) return null;
+    var entries = h.entries.filter(function (e) {
+      return e && isNum(e.t) && e.b && typeof e.b === "object";
+    }).map(function (e) {
+      var entry = { t: e.t, b: e.b };
+      if (isNum(e.r)) entry.r = e.r;
+      return entry;
+    });
+    if (!entries.length) return null;
+    return h.trimmed ? { entries: entries, trimmed: true } : { entries: entries };
   }
 
   function loadV1() {
@@ -1478,11 +1845,27 @@
     };
   }
 
-  // Only v3 is written; v2 and v1 stay untouched as fallbacks.
-  function saveState() {
+  // Only v4 is written; v3, v2 and v1 stay untouched as fallbacks. savedRaw is
+  // the v4 text this tab last read or wrote, so writes from other tabs show up
+  // as a difference.
+  var savedRaw = null;
+
+  function write(st) {
+    var raw = JSON.stringify({ version: 4, activeId: st.activeId, stocks: st.stocks, history: st.history });
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, activeId: state.activeId, stocks: state.stocks }));
-    } catch (e) { /* storage unavailable or full */ }
+      window.localStorage.setItem(STORAGE_KEY, raw);
+    } catch (e) { return false; }
+    savedRaw = raw;
+    return true;
+  }
+
+  function saveState() {
+    if (write(state)) return;
+    ask({
+      title: "Couldn't save",
+      text: "This browser's storage for AVG Entry is full or unavailable. This change is showing now but will be lost when the page reloads.",
+      actions: [{ id: "ok", label: "OK", kind: "primary" }]
+    });
   }
 
   function active() {
@@ -1497,6 +1880,150 @@
       if (state.stocks[i].ticker === ticker) return state.stocks[i];
     }
     return null;
+  }
+
+  function indexOfStock(id) {
+    for (var i = 0; i < state.stocks.length; i++) {
+      if (state.stocks[i].id === id) return i;
+    }
+    return -1;
+  }
+
+  // ---------- Snapshots ----------
+  // A snapshot is a self-contained copy of a stock's editable data: its order
+  // inputs and each buy and sale row as [id, seq, price, amount or shares,
+  // time added]. Edit history stores only these; results are recalculated.
+  function rowTuple(r, key) {
+    var t = [r.id, r.seq, r.price, r[key]];
+    if (isNum(r.at)) t.push(r.at);
+    return t;
+  }
+
+  function tupleRow(t, key) {
+    var r = { id: str(t[0], ""), seq: t[1], price: str(t[2], "") };
+    r[key] = str(t[3], "");
+    if (isNum(t[4])) r.at = t[4];
+    return r;
+  }
+
+  function snap(s) {
+    return {
+      e: s.entry,
+      x: s.exit,
+      i: s.invested,
+      b: s.buys.map(function (r) { return rowTuple(r, "amount"); }),
+      s: s.sales.map(function (r) { return rowTuple(r, "shares"); })
+    };
+  }
+
+  function unsnap(p) {
+    var rows = function (list, key) {
+      return (Array.isArray(list) ? list : []).filter(Array.isArray).map(function (t) { return tupleRow(t, key); });
+    };
+    return sequence({
+      entry: str(p.e, ""),
+      exit: str(p.x, ""),
+      invested: str(p.i, ""),
+      buys: rows(p.b, "amount"),
+      sales: rows(p.s, "shares")
+    });
+  }
+
+  function snapKey(s) { return JSON.stringify(snap(s)); }
+
+  function cloneRows(rows) {
+    return rows.map(function (r) {
+      var c = {};
+      Object.keys(r).forEach(function (k) { c[k] = r[k]; });
+      return c;
+    });
+  }
+
+  function cloneData(s) {
+    return { entry: s.entry, exit: s.exit, invested: s.invested, buys: cloneRows(s.buys), sales: cloneRows(s.sales) };
+  }
+
+  // ---------- Drafts ----------
+  // Edits to the selected stock collect in a draft that drives the inputs and
+  // results; only Save writes it. base is the saved snapshot the draft started
+  // from: if the saved stock changes underneath (another tab), it conflicts.
+  var draft = null;
+
+  function current() { return draft ? draft.data : active(); }
+
+  function edit() {
+    if (!draft) {
+      var s = active();
+      draft = { id: s.id, data: cloneData(s), base: snapKey(s) };
+    }
+    draft.error = "";
+    return draft.data;
+  }
+
+  function isDirty() {
+    return !!draft && (draft.orphan || snapKey(draft.data) !== snapKey(active()));
+  }
+
+  function conflicted() {
+    return !!draft && (draft.orphan || draft.base !== snapKey(active()));
+  }
+
+  function replayOf(s) {
+    var entry = parse(s.entry);
+    var invested = parse(s.invested);
+    var ok = entry > 0 && invested > 0;
+    return replay(s, ok ? invested / entry : 0, ok ? invested : 0);
+  }
+
+  // Blank and incomplete inputs are legitimate; negative values, sales the
+  // position can't cover and damaged transaction data are not.
+  function draftProblem(d) {
+    var raws = [d.entry, d.exit, d.invested];
+    d.buys.forEach(function (b) { raws.push(b.price, b.amount); });
+    d.sales.forEach(function (x) { raws.push(x.price, x.shares); });
+    if (raws.some(function (r) { return r.trim() !== "" && !(parse(r) >= 0); })) return "Negative or invalid numbers can't be saved.";
+    var ids = {};
+    var damaged = d.buys.concat(d.sales).some(function (t) {
+      var bad = !t.id || ids[t.id] || !(isNum(t.seq) && t.seq > 0);
+      ids[t.id] = true;
+      return bad;
+    });
+    if (damaged) return "Transaction data is damaged and can't be saved.";
+    if (replayOf(d).failed) return "Fix the highlighted sale to save.";
+    return "";
+  }
+
+  var STORAGE_FAILED = "Not saved: storage is full.";
+
+  // Writes the draft as the stock's saved state, with one new history entry
+  // holding the version it replaces. Memory only changes once the write
+  // succeeds, so a failed save keeps both the draft and the previous state.
+  function commitDraft() {
+    var d = draft;
+    var s = active();
+    var problem = draftProblem(d.data);
+    if (problem) return problem;
+    if (!isDirty()) {
+      draft = null;
+      return "";
+    }
+    var entry = { t: Date.now(), b: snap(s) };
+    if (isNum(d.restored)) entry.r = d.restored;
+    var h = state.history[s.id];
+    var history = {};
+    Object.keys(state.history).forEach(function (k) { history[k] = state.history[k]; });
+    history[s.id] = { entries: (h ? h.entries : []).concat([entry]) };
+    if (h && h.trimmed) history[s.id].trimmed = true;
+    var data = cloneData(d.data);
+    var stocks = state.stocks.map(function (x) {
+      if (x.id !== s.id) return x;
+      return { id: x.id, ticker: x.ticker, name: x.name, entry: data.entry, exit: data.exit, invested: data.invested, buys: data.buys, sales: data.sales };
+    });
+    var next = { activeId: state.activeId, stocks: stocks, history: history };
+    if (!write(next)) return STORAGE_FAILED;
+    state = next;
+    draft = null;
+    return "";
   }
 
   // ---------- Rendering ----------
@@ -1680,6 +2207,20 @@
   }
 
   function renderStock() {
+    renderHeader();
+    var d = current();
+    entryEl.value = d.entry;
+    exitEl.value = d.exit;
+    investedEl.value = d.invested;
+    buysEl.innerHTML = "";
+    salesEl.innerHTML = "";
+    if (salesEl.marginAnim) dropListMargin(salesEl, salesEl.marginAnim);
+    d.buys.forEach(function (b) { createRow("buys", b); });
+    d.sales.forEach(function (x) { createRow("sales", x); });
+    calculate();
+  }
+
+  function renderHeader() {
     var s = active();
     tickerEl.textContent = s.ticker || "Untitled";
     tickerEl.classList.toggle("untitled", !s.ticker);
@@ -1688,16 +2229,6 @@
     fsTicker.textContent = tickerEl.textContent;
     fsName.textContent = s.name;
     document.title = s.ticker ? s.ticker + " · AVG Entry" : "AVG Entry";
-
-    entryEl.value = s.entry;
-    exitEl.value = s.exit;
-    investedEl.value = s.invested;
-    buysEl.innerHTML = "";
-    salesEl.innerHTML = "";
-    if (salesEl.marginAnim) dropListMargin(salesEl, salesEl.marginAnim);
-    s.buys.forEach(function (b) { createRow("buys", b); });
-    s.sales.forEach(function (x) { createRow("sales", x); });
-    calculate();
   }
 
   function render() {
@@ -1712,11 +2243,12 @@
     renderTabs();
     renderStock();
     placeFloat();
+    updateBar();
   }
 
   // ---------- Calculation ----------
   function calculate() {
-    var s = active();
+    var s = current();
     var entry = parse(s.entry);
     var exit = parse(s.exit);
     var invested = parse(s.invested);
@@ -1793,17 +2325,20 @@
     var steps = s.buys.map(function (t, i) { return { t: t, i: i, sale: 0 }; })
       .concat(s.sales.map(function (t, i) { return { t: t, i: i, sale: 1 }; }))
       .sort(function (a, b) { return a.t.seq - b.t.seq || a.sale - b.sale || a.i - b.i; });
+    r.order = steps;
 
     for (var k = 0; k < steps.length; k++) {
       var t = steps[k].t;
       var price = parse(t.price);
       if (!steps[k].sale) {
         var amount = parse(t.amount);
-        if (price > 0 && amount > 0) {
+        var counted = price > 0 && amount > 0;
+        if (counted) {
           shares += amount / price;
           basis += amount;
           avg = basis / shares;
         }
+        steps[k].res = { counted: counted, shares: amount / price };
         continue;
       }
 
@@ -1811,7 +2346,10 @@
       var note = null;
       if (t.price.trim() !== "" && !(price >= 0)) note = { field: "s-price", text: "Enter a sell price of $0 or more." };
       else if (t.shares.trim() !== "" && !(qty > 0)) note = { field: "s-shares", text: "Enter shares sold above 0." };
-      else if (isNaN(price) || isNaN(qty)) continue;
+      else if (isNaN(price) || isNaN(qty)) {
+        steps[k].res = { counted: false };
+        continue;
+      }
       else if (!(shares > 0)) note = { field: "s-shares", text: "No shares available to sell." };
       else if (qty > shares + SHARE_TOLERANCE) {
         var held = fmtShares(shares);
@@ -1820,6 +2358,7 @@
       if (note) {
         r.notes[steps[k].i] = note;
         r.failed = true;
+        steps[k].res = { counted: false, note: note.text };
         break;
       }
 
@@ -1829,6 +2368,7 @@
       r.proceeds += qty * price;
       r.realized += qty * price - cost;
       r.sold += 1;
+      steps[k].res = { counted: true, shares: qty, proceeds: qty * price, realized: qty * price - cost };
       if (closes) {
         shares = 0;
         basis = 0;
@@ -1869,12 +2409,12 @@
   // ---------- Calculator events ----------
   function onChange() {
     calculate();
-    saveState();
+    updateBar();
   }
 
   function bindField(el, key) {
     el.addEventListener("input", function () {
-      active()[key] = el.value;
+      edit()[key] = el.value;
       onChange();
     });
   }
@@ -1896,8 +2436,9 @@
     list.el.addEventListener("input", function (e) {
       var li = e.target.closest(".buy");
       if (!li) return;
-      var item = active()[kind][rowIndex(list.el, li)];
-      if (!item) return;
+      var idx = rowIndex(list.el, li);
+      if (!current()[kind][idx]) return;
+      var item = edit()[kind][idx];
       list.fields.forEach(function (f) {
         if (e.target.classList.contains(f.cls)) item[f.key] = e.target.value;
       });
@@ -1915,7 +2456,7 @@
       var neighbour = rows[idx + 1] || rows[idx - 1];
       var hadFocus = li.contains(document.activeElement);
 
-      active()[kind].splice(idx, 1);
+      edit()[kind].splice(idx, 1);
       li.classList.add("leaving");
       li.inert = true;
       onChange();
@@ -1926,18 +2467,494 @@
     });
 
     list.add.addEventListener("click", function () {
-      var s = active();
-      var item = { id: newId("t"), seq: nextSeq(s) };
+      var d = edit();
+      var item = { id: newId("t"), seq: Math.max(nextSeq(d), nextSeq(active())), at: Date.now() };
       list.fields.forEach(function (f) { item[f.key] = ""; });
-      s[kind].push(item);
+      d[kind].push(item);
       createRow(kind, item, { animate: true });
       onChange();
     });
   });
 
+  // ---------- Confirmations ----------
+  var askDlg = $("ask");
+  var askDone = null;
+  var askReturn = null;
+
+  // actions: [{ id, label, kind: "primary" | "danger" }]; the first is focused.
+  // done(id) runs after the dialog closes; Escape answers null.
+  function ask(opts, done) {
+    $("ask-title").textContent = opts.title;
+    $("ask-text").textContent = opts.text;
+    var box = $("ask-actions");
+    box.innerHTML = "";
+    opts.actions.forEach(function (a) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "ask-btn" + (a.kind ? " " + a.kind : "");
+      b.textContent = a.label;
+      b.addEventListener("click", function () { answer(a.id); });
+      box.appendChild(b);
+    });
+    askDone = done || null;
+    askReturn = document.activeElement;
+    askDlg.showModal();
+    box.firstChild.focus();
+  }
+
+  function answer(choice) {
+    var done = askDone;
+    askDone = null;
+    askDlg.close();
+    if (askReturn && askReturn.isConnected && typeof askReturn.focus === "function") askReturn.focus({ preventScroll: true });
+    if (done) done(choice);
+  }
+
+  askDlg.addEventListener("cancel", function (e) {
+    e.preventDefault();
+    answer(null);
+  });
+
+  // ---------- Saving ----------
+  var editBar = $("edit-bar");
+  var editMsg = $("edit-msg");
+  var histBtn = $("s-history");
+
+  function updateBar() {
+    if (draft && !isDirty()) draft = null;
+    var text = "";
+    var warn = false;
+    if (draft) {
+      warn = !!draft.error || conflicted();
+      text = draft.error || (draft.orphan ? "Removed in another tab" : conflicted() ? "Changed in another tab" : "Unsaved changes");
+    }
+    if (editMsg.textContent !== text) editMsg.textContent = text;
+    editMsg.classList.toggle("error", warn);
+    if (!draft && editBar.contains(document.activeElement)) histBtn.focus({ preventScroll: true });
+    editBar.classList.toggle("shown", !!draft);
+    document.body.classList.toggle("editing", !!draft);
+  }
+
+  function stockLabel() { return active().ticker || "this stock"; }
+
+  // Saves the draft, then runs after. A draft whose saved stock changed in
+  // another tab is only written once the user chooses to replace that version.
+  function save(after) {
+    syncFromStorage();
+    if (!isDirty()) {
+      updateBar();
+      if (after) after();
+      return;
+    }
+    if (!conflicted()) {
+      finishSave(after);
+      return;
+    }
+    ask({
+      title: draft.orphan ? "Removed in another tab" : "Changed in another tab",
+      text: draft.orphan
+        ? stockLabel() + " was removed in another tab. Saving adds it back with your changes."
+        : stockLabel() + " was saved in another tab after you started editing. Saving now replaces that version; it stays available in History.",
+      actions: [
+        { id: "save", label: "Save mine", kind: "primary" },
+        { id: "discard", label: "Discard mine", kind: "danger" },
+        { id: "keep", label: "Keep editing" }
+      ]
+    }, function (choice) {
+      if (choice === "save") finishSave(after);
+      else if (choice === "discard") {
+        discard();
+        if (after) after();
+      }
+    });
+  }
+
+  function finishSave(after) {
+    var problem = commitDraft();
+    if (problem) {
+      draft.error = problem;
+      updateBar();
+      if (problem === STORAGE_FAILED) {
+        ask({
+          title: "Couldn't save",
+          text: "This browser's storage for AVG Entry is full or unavailable, so " + stockLabel() + " wasn't saved. Your changes are still here. Deleting older edits in a stock's History can free space.",
+          actions: [{ id: "ok", label: "OK", kind: "primary" }]
+        });
+      }
+      return;
+    }
+    calculate();
+    updateBar();
+    if (after) after();
+  }
+
+  function discard() {
+    if (!draft) return;
+    var orphan = draft.orphan;
+    draft = null;
+    if (orphan) {
+      var i = indexOfStock(state.activeId);
+      delete state.history[state.activeId];
+      state.stocks.splice(i, 1);
+      state.activeId = state.stocks.length ? state.stocks[Math.min(i, state.stocks.length - 1)].id : null;
+      render();
+      return;
+    }
+    renderStock();
+    updateBar();
+  }
+
+  // Resolves unsaved changes before something that would replace them; next
+  // only runs once they are saved or discarded.
+  function settle(next) {
+    if (!isDirty()) {
+      draft = null;
+      next();
+      return;
+    }
+    ask({
+      title: "Unsaved changes",
+      text: "Save your changes to " + stockLabel() + " before continuing?",
+      actions: [
+        { id: "save", label: "Save changes", kind: "primary" },
+        { id: "discard", label: "Discard changes", kind: "danger" },
+        { id: "keep", label: "Keep editing" }
+      ]
+    }, function (choice) {
+      if (choice === "save") save(next);
+      else if (choice === "discard") {
+        discard();
+        next();
+      }
+    });
+  }
+
+  $("edit-save").addEventListener("click", function () { save(null); });
+  $("edit-cancel").addEventListener("click", discard);
+
+  window.addEventListener("beforeunload", function (e) {
+    if (!isDirty()) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+
+  var coarsePointer = window.matchMedia("(pointer: coarse)");
+  document.addEventListener("focusin", function (e) {
+    document.body.classList.toggle("typing", coarsePointer.matches && e.target.matches("main input"));
+  });
+  document.addEventListener("focusout", function () { document.body.classList.remove("typing"); });
+
+  // ---------- Other tabs ----------
+  // Adopts data another tab has saved. A draft is kept; if its stock changed
+  // or disappeared there, the draft is flagged and Save asks before replacing.
+  function syncFromStorage() {
+    var raw = readRaw(STORAGE_KEY);
+    if (raw === null || raw === savedRaw) return;
+    var fresh = parseState(parseJSON(raw));
+    if (!fresh) return;
+    savedRaw = raw;
+    var before = state.stocks.length ? active() : null;
+    var beforeKey = before ? before.ticker + "|" + before.name + "|" + snapKey(before) : "";
+    if (draft && fresh.stocks.every(function (s) { return s.id !== draft.id; })) {
+      fresh.stocks.splice(Math.min(indexOfStock(draft.id), fresh.stocks.length), 0, before);
+      if (state.history[draft.id]) fresh.history[draft.id] = state.history[draft.id];
+      draft.orphan = true;
+    }
+    if (fresh.stocks.some(function (s) { return s.id === state.activeId; })) fresh.activeId = state.activeId;
+    state = fresh;
+    if (draft) {
+      renderTabs();
+      renderHeader();
+      placeFloat();
+      updateBar();
+    } else {
+      var now = state.stocks.length ? active() : null;
+      if (!now || !before || now.id !== before.id || now.ticker + "|" + now.name + "|" + snapKey(now) !== beforeKey) render();
+      else renderTabs();
+    }
+    if (histDlg.open) {
+      if (state.stocks.length) renderHistory();
+      else histDlg.close();
+    }
+  }
+
+  window.addEventListener("storage", function (e) {
+    if (e.key === STORAGE_KEY || e.key === null) syncFromStorage();
+  });
+
+  // ---------- History ----------
+  // Edit history keeps every saved edit; nothing is pruned automatically.
+  // Each edit stores one compact snapshot (the version it replaced), so a
+  // typical edit costs well under 1 KB of the ~5 MB browsers allow. If a save
+  // ever fails for lack of space, it is reported and the draft kept, and the
+  // user can choose to delete older edits per stock, keeping the newest
+  // KEEP_EDITS.
+  var KEEP_EDITS = 20;
+  var histDlg = $("history");
+  var panelTx = $("panel-tx");
+  var panelEdits = $("panel-edits");
+  var histTabs = [$("tab-tx"), $("tab-edits")];
+  var stampFmt = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+  function fmtStamp(t) { return stampFmt.format(new Date(t)); }
+
+  function fmtRaw(raw, kind) {
+    if (raw.trim() === "") return "blank";
+    var n = parse(raw);
+    if (!isNum(n)) return raw;
+    if (kind === "money") return fmtMoney(n);
+    if (kind === "shares") return fmtShares(n);
+    return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  }
+
+  function line(text, cls) {
+    return '<div class="hist-line' + (cls ? " " + cls : "") + '">' + esc(text) + "</div>";
+  }
+
+  function txItem(n, title, tag, lines, at) {
+    return '<li class="hist-item"><div class="hist-head"><span class="hist-num">#' + n + '</span>' +
+      '<span class="hist-title">' + esc(title) + '</span><span class="hist-tag">' + tag + "</span></div>" +
+      lines.join("") +
+      (at ? '<div class="hist-when">Added to AVG Entry ' + esc(fmtStamp(at)) + "</div>" : "") +
+      "</li>";
+  }
+
+  function savedNote() {
+    return isDirty() ? '<p class="hist-note">Showing saved data. Your unsaved changes aren’t included.</p>' : "";
+  }
+
+  function renderTransactions() {
+    var s = active();
+    var entry = parse(s.entry);
+    var invested = parse(s.invested);
+    var r = replayOf(s);
+    var items = [];
+    if (s.entry.trim() || s.invested.trim()) {
+      var ok = entry > 0 && invested > 0;
+      items.push(txItem(1, "Original order", "Buy", [
+        line("Price " + fmtRaw(s.entry, "price") + " · Invested " + fmtRaw(s.invested, "money") + (ok ? " · " + fmtShares(invested / entry) + " shares" : "")),
+        ok ? "" : line("Incomplete, so not included in calculations")
+      ], null));
+    }
+    r.order.forEach(function (step) {
+      var t = step.t;
+      var res = step.res;
+      var n = items.length + 1;
+      if (!step.sale) {
+        items.push(txItem(n, "Additional buy", "Buy", [
+          line("Price " + fmtRaw(t.price, "price") + " · Invested " + fmtRaw(t.amount, "money") + (res && res.counted ? " · " + fmtShares(res.shares) + " shares" : "")),
+          res && res.counted ? "" : line("Incomplete, so not included in calculations")
+        ], t.at));
+        return;
+      }
+      var lines = [line("Price " + fmtRaw(t.price, "price") + " · " + fmtRaw(t.shares, "shares") + " shares" + (res && res.counted ? " · Proceeds " + fmtMoney(res.proceeds) : ""))];
+      if (res && res.counted) {
+        var pl = Math.abs(res.realized) < 0.005 ? 0 : res.realized;
+        lines.push(line("Realized profit / loss " + fmtMoney(pl), pl > 0 ? "up" : pl < 0 ? "down" : ""));
+      } else if (res && res.note) lines.push(line(res.note, "down"));
+      else if (res) lines.push(line("Incomplete, so not included in calculations"));
+      else lines.push(line("Not calculated: an earlier sale exceeds the shares held"));
+      items.push(txItem(n, "Sale", "Sell", lines, t.at));
+    });
+    panelTx.innerHTML =
+      '<p class="hist-note">Planned transactions in the order they were added to AVG Entry. Realized results use the weighted-average cost at each sale. Times show when a transaction was added here, not when it was executed.</p>' +
+      savedNote() +
+      (items.length ? '<ul class="hist-list">' + items.join("") + "</ul>" : '<p class="hist-note">No saved transactions yet.</p>');
+  }
+
+  var FIELDS = [["entry", "Entry price", "price"], ["exit", "Exit price", "price"], ["invested", "Invested amount", "money"]];
+
+  function describeBuy(r) {
+    return !r.price && !r.amount ? "Blank row" : fmtRaw(r.amount, "money") + " at " + fmtRaw(r.price, "price");
+  }
+
+  function describeSale(r) {
+    return !r.price && !r.shares ? "Blank row" : fmtRaw(r.shares, "shares") + " shares at " + fmtRaw(r.price, "price");
+  }
+
+  function diffRows(out, before, after, noun, fields, describe) {
+    var old = {};
+    var kept = {};
+    before.forEach(function (r) { old[r.id] = r; });
+    after.forEach(function (r) {
+      var o = old[r.id];
+      if (!o) {
+        out.push({ title: noun + " added", lines: [describe(r)] });
+        return;
+      }
+      kept[r.id] = true;
+      var lines = [];
+      fields.forEach(function (f) {
+        if (o[f[0]] !== r[f[0]]) lines.push(f[1] + ": " + fmtRaw(o[f[0]], f[2]) + " → " + fmtRaw(r[f[0]], f[2]));
+      });
+      if (lines.length) out.push({ title: noun + " updated", lines: lines });
+    });
+    before.forEach(function (r) {
+      if (!kept[r.id]) out.push({ title: noun + " removed", lines: [describe(r)] });
+    });
+  }
+
+  function diff(a, b) {
+    var out = [];
+    FIELDS.forEach(function (f) {
+      if (a[f[0]] !== b[f[0]]) out.push({ title: f[1] + " changed", lines: [fmtRaw(a[f[0]], f[2]) + " → " + fmtRaw(b[f[0]], f[2])] });
+    });
+    diffRows(out, a.buys, b.buys, "Additional buy", [["price", "Price", "price"], ["amount", "Invested", "money"]], describeBuy);
+    diffRows(out, a.sales, b.sales, "Sale", [["price", "Price", "price"], ["shares", "Shares", "shares"]], describeSale);
+    return out;
+  }
+
+  // The saved version after edit i: where the next edit started, or the stock
+  // as saved now for the newest edit.
+  function versionAfter(h, i) {
+    return i + 1 < h.entries.length ? unsnap(h.entries[i + 1].b) : cloneData(active());
+  }
+
+  function restoreButton(key, which) {
+    return key === snapKey(active())
+      ? '<span class="hist-current">Current version</span>'
+      : '<button type="button" class="text-btn" data-restore="' + which + '">Restore</button>';
+  }
+
+  function renderEdits() {
+    var s = active();
+    var h = state.history[s.id];
+    if (!h) {
+      panelEdits.innerHTML = savedNote() +
+        '<p class="hist-note">No saved edits yet. Each time you save changes to ' + esc(stockLabel()) + ", the change appears here and earlier versions can be restored.</p>";
+      return;
+    }
+    var items = [];
+    for (var i = h.entries.length - 1; i >= 0; i--) {
+      var e = h.entries[i];
+      var after = versionAfter(h, i);
+      var changes = diff(unsnap(e.b), after);
+      var title = isNum(e.r)
+        ? (e.r === 0 ? "Restored the " + (h.trimmed ? "oldest kept" : "original") + " version" : "Restored the version from " + fmtStamp(e.r))
+        : changes.length === 1 ? changes[0].title : changes.length + " changes";
+      var body;
+      if (changes.length === 1 && !isNum(e.r)) {
+        body = changes[0].lines.map(function (l) { return line(l); }).join("");
+      } else {
+        body = (isNum(e.r) || !changes.length ? "" : line(changes.map(function (c) { return c.title; }).join(", "))) +
+          (changes.length ? "<details><summary>Show details</summary>" + changes.map(function (c) {
+            return '<div class="hist-change">' + esc(c.title) + c.lines.map(function (l) { return line(l); }).join("") + "</div>";
+          }).join("") + "</details>" : "");
+      }
+      items.push('<li class="hist-item"><div class="hist-head"><span class="hist-title">' + esc(title) + "</span></div>" + body +
+        '<div class="hist-foot"><span class="hist-when">Saved ' + esc(fmtStamp(e.t)) + "</span>" +
+        restoreButton(JSON.stringify(snap(after)), i) + "</div></li>");
+    }
+    items.push('<li class="hist-item"><div class="hist-head"><span class="hist-title">' +
+      (h.trimmed ? "Oldest kept version" : "Original version") + "</span></div>" +
+      line(h.trimmed ? "The earliest version still kept in history." : "Saved data from before the first recorded edit.") +
+      '<div class="hist-foot"><span></span>' + restoreButton(JSON.stringify(h.entries[0].b), "base") + "</div></li>");
+    panelEdits.innerHTML = savedNote() +
+      (h.entries.length > KEEP_EDITS
+        ? '<p class="hist-note">' + h.entries.length + ' saved edits. You can delete older ones to free storage.</p><button type="button" class="text-btn hist-trim" data-trim>Delete older edits</button>'
+        : "") +
+      '<ul class="hist-list">' + items.join("") + "</ul>";
+  }
+
+  function renderHistory() {
+    $("history-title").textContent = (active().ticker || "Untitled") + " History";
+    renderTransactions();
+    renderEdits();
+  }
+
+  function showView(i, focus) {
+    histTabs.forEach(function (tab, k) {
+      tab.setAttribute("aria-selected", k === i ? "true" : "false");
+      tab.tabIndex = k === i ? 0 : -1;
+    });
+    panelTx.hidden = i !== 0;
+    panelEdits.hidden = i !== 1;
+    if (focus) histTabs[i].focus();
+  }
+
+  histTabs.forEach(function (tab, i) {
+    tab.addEventListener("click", function () { showView(i, false); });
+    tab.addEventListener("keydown", function (e) {
+      var to = e.key === "ArrowRight" || e.key === "End" ? 1 : e.key === "ArrowLeft" || e.key === "Home" ? 0 : -1;
+      if (to < 0) return;
+      e.preventDefault();
+      showView(to, true);
+    });
+  });
+
+  histBtn.addEventListener("click", function () {
+    renderHistory();
+    histDlg.querySelector(".hist-body").scrollTop = 0;
+    histDlg.showModal();
+    histTabs[panelTx.hidden ? 1 : 0].focus();
+  });
+
+  $("history-done").addEventListener("click", function () { histDlg.close(); });
+  histDlg.addEventListener("click", function (e) { if (e.target === histDlg) histDlg.close(); });
+  histDlg.addEventListener("close", function () {
+    if (!askDlg.open && (document.activeElement === document.body || histDlg.contains(document.activeElement))) {
+      histBtn.focus({ preventScroll: true });
+    }
+  });
+
+  panelEdits.addEventListener("click", function (e) {
+    var restore = e.target.closest("[data-restore]");
+    if (restore) {
+      var which = restore.getAttribute("data-restore");
+      settle(function () { confirmRestore(which === "base" ? "base" : Number(which)); });
+      return;
+    }
+    if (e.target.closest("[data-trim]")) confirmTrim();
+  });
+
+  function confirmRestore(which) {
+    ask({
+      title: "Restore this version?",
+      text: "This replaces " + stockLabel() + "’s current inputs and transactions with the selected version. Other stocks aren’t affected, and nothing is saved until you choose Save.",
+      actions: [{ id: "restore", label: "Restore", kind: "primary" }, { id: "cancel", label: "Cancel" }]
+    }, function (choice) {
+      if (choice !== "restore") return;
+      var s = active();
+      var h = state.history[s.id];
+      if (!h) return;
+      var base = which === "base";
+      draft = {
+        id: s.id,
+        data: base ? unsnap(h.entries[0].b) : versionAfter(h, which),
+        base: snapKey(s),
+        restored: base ? 0 : h.entries[which].t
+      };
+      histDlg.close();
+      renderStock();
+      updateBar();
+    });
+  }
+
+  function confirmTrim() {
+    ask({
+      title: "Delete older edits?",
+      text: "Keeps the newest " + KEEP_EDITS + " saved edits for " + stockLabel() + " and permanently deletes the rest. Deleted versions can’t be restored.",
+      actions: [{ id: "cancel", label: "Cancel" }, { id: "delete", label: "Delete older edits", kind: "danger" }]
+    }, function (choice) {
+      if (choice !== "delete") return;
+      syncFromStorage();
+      var id = state.activeId;
+      var h = state.history[id];
+      if (!h || h.entries.length <= KEEP_EDITS) return;
+      var history = {};
+      Object.keys(state.history).forEach(function (k) { history[k] = state.history[k]; });
+      history[id] = { entries: h.entries.slice(-KEEP_EDITS), trimmed: true };
+      var next = { activeId: state.activeId, stocks: state.stocks, history: history };
+      if (write(next)) state = next;
+      else ask({ title: "Couldn't delete", text: "This browser's storage is unavailable, so nothing was changed.", actions: [{ id: "ok", label: "OK", kind: "primary" }] });
+      renderHistory();
+    });
+  }
+
   // ---------- Stock management ----------
   function switchTo(id) {
-    if (!state.stocks.some(function (s) { return s.id === id; })) return;
+    syncFromStorage();
+    if (indexOfStock(id) < 0) return;
     state.activeId = id;
     saveState();
     render();
@@ -1945,14 +2962,16 @@
 
   tabsEl.addEventListener("click", function (e) {
     var tab = e.target.closest(".tab");
-    if (tab && tab.dataset.id !== state.activeId) switchTo(tab.dataset.id);
+    if (!tab || tab.dataset.id === state.activeId) return;
+    var id = tab.dataset.id;
+    settle(function () { switchTo(id); });
   });
 
   tickerSelect.addEventListener("change", function () {
     var value = tickerSelect.value;
     tickerSelect.value = state.activeId;
-    if (value === ADD_OPTION) openPicker("add");
-    else if (value !== state.activeId) switchTo(value);
+    if (value === ADD_OPTION) settle(function () { openPicker("add"); });
+    else if (value !== state.activeId) settle(function () { switchTo(value); });
   });
 
   tabsEl.addEventListener("keydown", function (e) {
@@ -1964,19 +2983,29 @@
     else if (e.key === "Home") i = 0;
     else i = ids.length - 1;
     e.preventDefault();
-    switchTo(ids[i]);
-    tabsEl.querySelector('[aria-selected="true"]').focus();
+    var id = ids[i];
+    if (id === state.activeId) return;
+    settle(function () {
+      switchTo(id);
+      var tab = tabsEl.querySelector('[aria-selected="true"]');
+      if (tab) tab.focus();
+    });
   });
 
   removeStockBtn.addEventListener("click", function () {
-    var s = active();
-    var label = s.ticker || "this untitled stock";
-    if (!window.confirm("Remove " + label + "? Its prices and buys will be deleted.")) return;
-    var i = state.stocks.indexOf(s);
-    state.stocks.splice(i, 1);
-    state.activeId = state.stocks.length ? state.stocks[Math.min(i, state.stocks.length - 1)].id : null;
-    saveState();
-    render();
+    settle(function () {
+      var s = active();
+      var label = s.ticker || "this untitled stock";
+      if (!window.confirm("Remove " + label + "? Its prices, transactions and history will be deleted.")) return;
+      syncFromStorage();
+      var i = indexOfStock(s.id);
+      if (i < 0) return;
+      state.stocks.splice(i, 1);
+      delete state.history[s.id];
+      state.activeId = state.stocks.length ? state.stocks[Math.min(i, state.stocks.length - 1)].id : null;
+      saveState();
+      render();
+    });
   });
 
   // ---------- Stock directory ----------
@@ -2184,14 +3213,18 @@
     firstQ.value = "";
 
     if (existing) {
-      if (existing.id !== state.activeId) switchTo(existing.id);
+      if (existing.id !== state.activeId) settle(function () { switchTo(existing.id); });
     } else if (mode === "assign") {
-      var current = active();
-      current.ticker = item.sym;
-      if (item.name) current.name = item.name;
+      syncFromStorage();
+      var named = active();
+      named.ticker = item.sym;
+      if (item.name) named.name = item.name;
       saveState();
-      render();
+      renderTabs();
+      renderHeader();
+      placeFloat();
     } else {
+      syncFromStorage();
       var s = makeStock(item.sym, item.name);
       state.stocks.push(s);
       state.activeId = s.id;
@@ -2201,7 +3234,7 @@
     }
   }
 
-  addStockBtn.addEventListener("click", function () { openPicker("add"); });
+  addStockBtn.addEventListener("click", function () { settle(function () { openPicker("add"); }); });
   assignBtn.addEventListener("click", function () { openPicker("assign"); });
   $("picker-cancel").addEventListener("click", closePicker);
 
@@ -2338,13 +3371,14 @@
   });
 
   // ---------- Init (never writes to storage) ----------
-  state = loadStocks(STORAGE_KEY) || loadStocks(STORAGE_V2);
+  savedRaw = readRaw(STORAGE_KEY);
+  state = parseState(parseJSON(savedRaw)) || loadStocks(STORAGE_V3) || loadStocks(STORAGE_V2);
   if (!state) {
     var restored = loadV1();
     var migrated = restored && makeStock("", "", restored);
     state = migrated && !isBlank(migrated)
-      ? { activeId: migrated.id, stocks: [migrated] }
-      : { activeId: null, stocks: [] };
+      ? { activeId: migrated.id, stocks: [migrated], history: {} }
+      : { activeId: null, stocks: [], history: {} };
   }
   render();
   tickSession();
