@@ -598,11 +598,19 @@
       transform: translateY(6px);
     }
 
-    .buy.buy-enter-active {
+    .buy.buy-enter-active,
+    .buy.buy-exit {
       transition:
         height 250ms cubic-bezier(0.22, 1, 0.36, 1),
         opacity 250ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+        transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+        margin-top 250ms cubic-bezier(0.22, 1, 0.36, 1),
+        margin-bottom 250ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .buy.buy-exit {
+      overflow: hidden;
+      pointer-events: none;
     }
   }
 
@@ -1469,6 +1477,48 @@
     setTimeout(cleanup, 280);
   }
 
+  function animateBuyRowRemove(li, done) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (li.parentNode) li.remove();
+      if (done) done();
+      return;
+    }
+
+    var gap = parseFloat(getComputedStyle(buysEl).rowGap) || 10;
+    var h = li.offsetHeight;
+    var hasNext = !!li.nextElementSibling;
+    var hasPrev = !!li.previousElementSibling;
+
+    li.classList.remove("buy-enter", "buy-enter-active");
+    li.style.height = h + "px";
+    li.style.overflow = "hidden";
+    li.classList.add("buy-exit");
+
+    var endMT = hasPrev && !hasNext ? -gap + "px" : "0px";
+    var endMB = hasNext ? -gap + "px" : "0px";
+
+    requestAnimationFrame(function () {
+      li.style.height = "0px";
+      li.style.opacity = "0";
+      li.style.transform = "translateY(-6px)";
+      li.style.marginTop = endMT;
+      li.style.marginBottom = endMB;
+    });
+
+    var cleaned = false;
+    function cleanup(e) {
+      if (cleaned) return;
+      if (e && (e.target !== li || e.propertyName !== "height")) return;
+      cleaned = true;
+      li.removeEventListener("transitionend", cleanup);
+      if (li.parentNode) li.remove();
+      if (done) done();
+    }
+
+    li.addEventListener("transitionend", cleanup);
+    setTimeout(cleanup, 280);
+  }
+
   function createRow(price, amount, opts) {
     rowSeq += 1;
     var id = rowSeq;
@@ -1659,20 +1709,40 @@
 
   buysEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".remove");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     var li = btn.closest(".buy");
-    var next = li.nextElementSibling || li.previousElementSibling;
-    active().buys.splice(rowIndex(li), 1);
-    li.remove();
+    if (!li || li.classList.contains("buy-exit")) return;
+
+    var idx = rowIndex(li);
+    if (idx < 0) return;
+
+    var next = li.nextElementSibling;
+    var prev = li.previousElementSibling;
+    var focusEl = document.activeElement;
+
+    active().buys.splice(idx, 1);
     onChange();
-    (next ? next.querySelector(".b-price") : addBtn).focus();
+    btn.disabled = true;
+
+    animateBuyRowRemove(li, function () {
+      if (focusEl === btn || li.contains(focusEl)) {
+        if (next && next.classList.contains("buy") && !next.classList.contains("buy-exit")) {
+          var rm = next.querySelector(".remove");
+          if (rm) rm.focus();
+        } else if (prev && prev.classList.contains("buy") && !prev.classList.contains("buy-exit")) {
+          var rp = prev.querySelector(".remove");
+          if (rp) rp.focus();
+        } else {
+          addBtn.focus();
+        }
+      }
+    });
   });
 
   addBtn.addEventListener("click", function () {
     active().buys.push({ price: "", amount: "" });
-    var li = createRow("", "", { animate: true });
+    createRow("", "", { animate: true });
     onChange();
-    li.querySelector(".b-price").focus();
   });
 
   // ---------- Stock management ----------
