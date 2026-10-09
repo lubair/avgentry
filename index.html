@@ -564,12 +564,14 @@
   .up { color: var(--up); }
   .down { color: var(--down); }
 
+  /* Flex rather than grid: row animations cancel the gap with a negative margin,
+     which grid tracks clamp at zero. */
   .buys {
     list-style: none;
     margin: 0 0 var(--inner-gap);
     padding: 0;
-    display: grid;
-    align-content: start;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
 
@@ -590,29 +592,7 @@
     white-space: nowrap;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .buy.buy-enter {
-      overflow: hidden;
-      height: 0;
-      opacity: 0;
-      transform: translateY(6px);
-    }
-
-    .buy.buy-enter-active,
-    .buy.buy-exit {
-      transition:
-        height 250ms cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 250ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
-        margin-top 250ms cubic-bezier(0.22, 1, 0.36, 1),
-        margin-bottom 250ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .buy.buy-exit {
-      overflow: hidden;
-      pointer-events: none;
-    }
-  }
+  .buy.leaving { pointer-events: none; }
 
   .remove {
     display: grid;
@@ -1449,74 +1429,59 @@
   // ---------- Rendering ----------
   var rowSeq = 0;
 
-  function animateBuyRowInsert(li) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var ROW_ADD_MS = 320;
+  var ROW_REMOVE_MS = 300;
+  var ROW_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 
-    var h = li.scrollHeight;
-    li.classList.add("buy-enter-active");
-
-    requestAnimationFrame(function () {
-      li.style.height = h + "px";
-      li.style.opacity = "1";
-      li.style.transform = "translateY(0)";
-    });
-
-    var cleaned = false;
-    function cleanup(e) {
-      if (cleaned) return;
-      if (e && (e.target !== li || e.propertyName !== "height")) return;
-      cleaned = true;
-      li.removeEventListener("transitionend", cleanup);
-      li.classList.remove("buy-enter", "buy-enter-active");
-      li.style.height = "";
-      li.style.opacity = "";
-      li.style.transform = "";
-    }
-
-    li.addEventListener("transitionend", cleanup);
-    setTimeout(cleanup, 280);
+  function motionOK() {
+    return typeof Element.prototype.animate === "function" &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  function animateBuyRowRemove(li, done) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      if (li.parentNode) li.remove();
-      if (done) done();
-      return;
-    }
+  function rowGap() {
+    return parseFloat(getComputedStyle(buysEl).rowGap) || 0;
+  }
 
-    var gap = parseFloat(getComputedStyle(buysEl).rowGap) || 10;
+  // The row and the list gap above it open together, so nothing below jumps.
+  function revealRow(li) {
     var h = li.offsetHeight;
-    var hasNext = !!li.nextElementSibling;
-    var hasPrev = !!li.previousElementSibling;
-
-    li.classList.remove("buy-enter", "buy-enter-active");
-    li.style.height = h + "px";
+    var gap = li.previousElementSibling ? rowGap() : 0;
     li.style.overflow = "hidden";
-    li.classList.add("buy-exit");
+    li.animate([
+      { height: "0px", marginTop: -gap + "px", opacity: 0, transform: "translateY(-3px)" },
+      { height: h + "px", marginTop: "0px", opacity: 1, transform: "none" }
+    ], { duration: ROW_ADD_MS, easing: ROW_EASE }).onfinish = function () {
+      li.style.overflow = "";
+    };
+  }
 
-    var endMT = hasPrev && !hasNext ? -gap + "px" : "0px";
-    var endMB = hasNext ? -gap + "px" : "0px";
+  // Collapses the row together with one adjoining list gap. When the first row
+  // leaves, it stops at its label strip: the next row reveals the same labels
+  // when this one is removed, so the swap is invisible.
+  function collapseRow(li) {
+    var next = li.nextElementSibling;
+    var prev = li.previousElementSibling;
+    var gap = next || prev ? rowGap() : 0;
+    var keepLabels = !prev && next;
+    var h = li.offsetHeight;
+    var end = keepLabels ? li.querySelector("input").getBoundingClientRect().top - li.getBoundingClientRect().top : 0;
+    var margin = next ? "marginBottom" : "marginTop";
+    var from = { height: h + "px" };
+    var to = { height: end + "px" };
+    from[margin] = "0px";
+    to[margin] = -gap + "px";
 
-    requestAnimationFrame(function () {
-      li.style.height = "0px";
-      li.style.opacity = "0";
-      li.style.transform = "translateY(-6px)";
-      li.style.marginTop = endMT;
-      li.style.marginBottom = endMB;
+    var faders = keepLabels ? li.querySelectorAll("input, .remove") : [li];
+    li.style.overflow = "hidden";
+    var anim = li.animate([from, to], { duration: ROW_REMOVE_MS, easing: ROW_EASE, fill: "forwards" });
+    Array.prototype.forEach.call(faders, function (el) {
+      el.animate([
+        { opacity: 1 },
+        { opacity: 0, offset: 0.6 },
+        { opacity: 0 }
+      ], { duration: ROW_REMOVE_MS, easing: ROW_EASE, fill: "forwards" });
     });
-
-    var cleaned = false;
-    function cleanup(e) {
-      if (cleaned) return;
-      if (e && (e.target !== li || e.propertyName !== "height")) return;
-      cleaned = true;
-      li.removeEventListener("transitionend", cleanup);
-      if (li.parentNode) li.remove();
-      if (done) done();
-    }
-
-    li.addEventListener("transitionend", cleanup);
-    setTimeout(cleanup, 280);
+    anim.onfinish = function () { li.remove(); };
   }
 
   function createRow(price, amount, opts) {
@@ -1524,9 +1489,6 @@
     var id = rowSeq;
     var li = document.createElement("li");
     li.className = "buy";
-    if (opts && opts.animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      li.classList.add("buy-enter");
-    }
     li.innerHTML =
       '<div><label for="bp' + id + '">Buy price ($)</label>' +
       '<input id="bp' + id + '" class="b-price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
@@ -1538,7 +1500,7 @@
     li.querySelector(".b-price").value = price;
     li.querySelector(".b-amount").value = amount;
     buysEl.appendChild(li);
-    if (opts && opts.animate) animateBuyRowInsert(li);
+    if (opts && opts.animate && motionOK()) revealRow(li);
     return li;
   }
 
@@ -1693,8 +1655,12 @@
   bindField(exitEl, "exit");
   bindField(investedEl, "invested");
 
+  function liveRows() {
+    return buysEl.querySelectorAll(".buy:not(.leaving)");
+  }
+
   function rowIndex(li) {
-    return Array.prototype.indexOf.call(buysEl.children, li);
+    return Array.prototype.indexOf.call(liveRows(), li);
   }
 
   buysEl.addEventListener("input", function (e) {
@@ -1709,34 +1675,23 @@
 
   buysEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".remove");
-    if (!btn || btn.disabled) return;
+    if (!btn) return;
     var li = btn.closest(".buy");
-    if (!li || li.classList.contains("buy-exit")) return;
-
     var idx = rowIndex(li);
     if (idx < 0) return;
 
-    var next = li.nextElementSibling;
-    var prev = li.previousElementSibling;
-    var focusEl = document.activeElement;
+    var rows = liveRows();
+    var neighbour = rows[idx + 1] || rows[idx - 1];
+    var hadFocus = li.contains(document.activeElement);
 
     active().buys.splice(idx, 1);
     onChange();
-    btn.disabled = true;
+    li.classList.add("leaving");
+    li.inert = true;
+    if (hadFocus) (neighbour ? neighbour.querySelector(".remove") : addBtn).focus({ preventScroll: true });
 
-    animateBuyRowRemove(li, function () {
-      if (focusEl === btn || li.contains(focusEl)) {
-        if (next && next.classList.contains("buy") && !next.classList.contains("buy-exit")) {
-          var rm = next.querySelector(".remove");
-          if (rm) rm.focus();
-        } else if (prev && prev.classList.contains("buy") && !prev.classList.contains("buy-exit")) {
-          var rp = prev.querySelector(".remove");
-          if (rp) rp.focus();
-        } else {
-          addBtn.focus();
-        }
-      }
-    });
+    if (motionOK()) collapseRow(li);
+    else li.remove();
   });
 
   addBtn.addEventListener("click", function () {
