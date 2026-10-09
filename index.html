@@ -576,14 +576,16 @@
   .add {
     width: 100%;
     font-size: 15px;
-    color: var(--accent);
+    color: var(--hero);
     background: transparent;
     border: 1px dashed var(--line);
     border-radius: 12px;
     padding: 10px;
   }
 
-  .add:hover { border-color: var(--accent); background: var(--hover); }
+  .add:hover { border-color: var(--hero); background: var(--hover); }
+
+  .add:focus-visible { outline-color: var(--hero); }
 
   .hero {
     background: var(--hero);
