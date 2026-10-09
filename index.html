@@ -34,9 +34,9 @@
     --ghost-text: #a0a9a3;
     --backdrop: rgba(15, 21, 18, 0.28);
     --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
-    --add-bg: #252a27;
-    --add-hover: #2f3531;
-    --add-fg: #ffffff;
+    --add-bg: var(--field);
+    --add-hover: var(--hover);
+    --add-fg: var(--text);
     --inner-gap: 14px;
     color-scheme: light dark;
   }
@@ -63,8 +63,6 @@
       --ghost-text: #6b6b6b;
       --backdrop: rgba(0, 0, 0, 0.5);
       --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
-      --add-bg: #2a2a2a;
-      --add-hover: #333333;
     }
   }
 
@@ -338,14 +336,30 @@
 
   .tab.untitled { font-weight: 500; font-style: italic; }
 
+  .add-stock,
+  .add {
+    color: var(--add-fg);
+    background: var(--add-bg);
+    border: 1px solid var(--line);
+  }
+
+  .add-stock:hover,
+  .add:hover { background: var(--add-hover); }
+
+  .add-stock:active,
+  .add:active { background: var(--hover); }
+
+  .add-stock:focus-visible,
+  .add:focus-visible {
+    outline: 2px solid var(--muted);
+    outline-offset: 2px;
+  }
+
   .add-stock {
     flex: none;
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    border: 1px dashed var(--line);
-    background: var(--add-bg);
-    color: var(--add-fg);
     display: grid;
     place-items: center;
     padding: 0;
@@ -355,13 +369,6 @@
     flex: none;
     width: 16px;
     height: 16px;
-  }
-
-  .add-stock:hover { background: var(--add-hover); }
-
-  .add-stock:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 2px;
   }
 
   @media (max-width: 599px) {
@@ -594,9 +601,6 @@
     width: 100%;
     font-size: 15px;
     font-weight: 500;
-    color: var(--add-fg);
-    background: var(--add-bg);
-    border: 1px dashed var(--line);
     border-radius: 12px;
     padding: 10px;
   }
@@ -605,13 +609,6 @@
     flex: none;
     width: 16px;
     height: 16px;
-  }
-
-  .add:hover { background: var(--add-hover); }
-
-  .add:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 2px;
   }
 
   .hero {
