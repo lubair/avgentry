@@ -35,6 +35,7 @@
     --backdrop: rgba(15, 21, 18, 0.28);
     --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
     --focus: #111111;
+    --input-focus: #8a928c;
     --add-stock-icon: #111111;
     --cta-bg: #111111;
     --cta-fg: #ffffff;
@@ -66,6 +67,7 @@
       --backdrop: rgba(0, 0, 0, 0.5);
       --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
       --focus: #f5f5f5;
+      --input-focus: #a0a0a0;
       --add-stock-icon: #f5f5f5;
       --cta-bg: #f5f5f5;
       --cta-fg: #111111;
@@ -522,8 +524,8 @@
 
   input:focus,
   input:focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 0;
+    outline: 1px solid var(--input-focus);
+    outline-offset: -1px;
     border-color: var(--line);
     box-shadow: none;
   }
