@@ -458,6 +458,7 @@
     color: var(--muted);
     display: grid;
     place-items: center;
+    transition: color 0.15s ease;
   }
 
   .trash-btn::before {
@@ -468,15 +469,22 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
+    background: var(--tab-active);
+    transition: background-color 0.15s ease;
   }
 
   .trash-btn svg { position: relative; display: block; }
 
   .trash-btn:hover,
-  .trash-btn:focus-visible { color: var(--down); }
+  .trash-btn:focus-visible { color: #ffffff; }
 
   .trash-btn:hover::before,
-  .trash-btn:focus-visible::before { background: var(--down-soft); }
+  .trash-btn:focus-visible::before { background: var(--down); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .trash-btn,
+    .trash-btn::before { transition: none; }
+  }
 
   .trash-btn:focus-visible { outline: none; }
 
