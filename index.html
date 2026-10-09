@@ -818,6 +818,81 @@
 
   .fs-name:empty { display: none; }
 
+  /* ---------- Progressive bottom blur ---------- */
+  /* Each layer blurs twice as strongly as the one above and is masked to an
+     overlapping band. Opacity is faded per layer: opacity below 1 on the
+     container would make it a backdrop root and drop the blur mid-fade. */
+  .pblur {
+    --pb-h: 64px;
+    --pb-unit: 0.5px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    height: calc(var(--pb-h) + env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+
+  .pblur > span {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .pblur.on > span {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease;
+  }
+
+  .pblur > span:nth-child(1) {
+    -webkit-backdrop-filter: blur(var(--pb-unit));
+    backdrop-filter: blur(var(--pb-unit));
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 40%, transparent 60%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 40%, transparent 60%);
+  }
+  .pblur > span:nth-child(2) {
+    -webkit-backdrop-filter: blur(calc(var(--pb-unit) * 2));
+    backdrop-filter: blur(calc(var(--pb-unit) * 2));
+    -webkit-mask-image: linear-gradient(to bottom, transparent 20%, #000 40%, #000 60%, transparent 80%);
+    mask-image: linear-gradient(to bottom, transparent 20%, #000 40%, #000 60%, transparent 80%);
+  }
+  .pblur > span:nth-child(3) {
+    -webkit-backdrop-filter: blur(calc(var(--pb-unit) * 4));
+    backdrop-filter: blur(calc(var(--pb-unit) * 4));
+    -webkit-mask-image: linear-gradient(to bottom, transparent 40%, #000 60%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 40%, #000 60%, #000 80%, transparent 100%);
+  }
+  .pblur > span:nth-child(4) {
+    -webkit-backdrop-filter: blur(calc(var(--pb-unit) * 8));
+    backdrop-filter: blur(calc(var(--pb-unit) * 8));
+    -webkit-mask-image: linear-gradient(to bottom, transparent 60%, #000 80%, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 60%, #000 80%, #000 100%);
+  }
+  .pblur > span:nth-child(5) {
+    -webkit-backdrop-filter: blur(calc(var(--pb-unit) * 16));
+    backdrop-filter: blur(calc(var(--pb-unit) * 16));
+    -webkit-mask-image: linear-gradient(to bottom, transparent 80%, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 80%, #000 100%);
+  }
+
+  @media (pointer: coarse) and (min-width: 600px) {
+    .pblur { --pb-h: 56px; }
+  }
+
+  @media (max-width: 599px) {
+    .pblur { --pb-h: 40px; --pb-unit: 0.25px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pblur > span, .pblur.on > span { transition: none; }
+  }
+
+  .scroll-end { height: 0; }
+
   /* ---------- Stock picker ---------- */
   dialog {
     width: min(520px, calc(100% - 24px));
@@ -1100,6 +1175,9 @@
   </div>
 </div>
 
+<div class="scroll-end" id="scroll-end" aria-hidden="true"></div>
+<div class="pblur" id="pblur" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
 <div class="float-stock" id="float-stock" aria-hidden="true">
   <span class="fs-ticker" id="fs-ticker"></span>
   <span class="fs-name" id="fs-name"></span>
@@ -1156,6 +1234,11 @@
       var e = entries[entries.length - 1];
       floatEl.classList.toggle("shown", state.stocks.length > 0 && !e.isIntersecting && e.boundingClientRect.bottom <= 0);
     }).observe(document.querySelector(".stock-head"));
+
+    var pblurEl = $("pblur");
+    new IntersectionObserver(function (entries) {
+      pblurEl.classList.toggle("on", !entries[entries.length - 1].isIntersecting);
+    }, { rootMargin: "0px 0px 2px 0px" }).observe($("scroll-end"));
   }
 
   function placeFloat() {
