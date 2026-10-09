@@ -590,6 +590,22 @@
     white-space: nowrap;
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    .buy.buy-enter {
+      overflow: hidden;
+      height: 0;
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .buy.buy-enter-active {
+      transition:
+        height 250ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 250ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
   .remove {
     display: grid;
     place-items: center;
@@ -1425,11 +1441,42 @@
   // ---------- Rendering ----------
   var rowSeq = 0;
 
-  function createRow(price, amount) {
+  function animateBuyRowInsert(li) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var h = li.scrollHeight;
+    li.classList.add("buy-enter-active");
+
+    requestAnimationFrame(function () {
+      li.style.height = h + "px";
+      li.style.opacity = "1";
+      li.style.transform = "translateY(0)";
+    });
+
+    var cleaned = false;
+    function cleanup(e) {
+      if (cleaned) return;
+      if (e && (e.target !== li || e.propertyName !== "height")) return;
+      cleaned = true;
+      li.removeEventListener("transitionend", cleanup);
+      li.classList.remove("buy-enter", "buy-enter-active");
+      li.style.height = "";
+      li.style.opacity = "";
+      li.style.transform = "";
+    }
+
+    li.addEventListener("transitionend", cleanup);
+    setTimeout(cleanup, 280);
+  }
+
+  function createRow(price, amount, opts) {
     rowSeq += 1;
     var id = rowSeq;
     var li = document.createElement("li");
     li.className = "buy";
+    if (opts && opts.animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      li.classList.add("buy-enter");
+    }
     li.innerHTML =
       '<div><label for="bp' + id + '">Buy price ($)</label>' +
       '<input id="bp' + id + '" class="b-price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
@@ -1441,6 +1488,7 @@
     li.querySelector(".b-price").value = price;
     li.querySelector(".b-amount").value = amount;
     buysEl.appendChild(li);
+    if (opts && opts.animate) animateBuyRowInsert(li);
     return li;
   }
 
@@ -1622,7 +1670,7 @@
 
   addBtn.addEventListener("click", function () {
     active().buys.push({ price: "", amount: "" });
-    var li = createRow("", "");
+    var li = createRow("", "", { animate: true });
     onChange();
     li.querySelector(".b-price").focus();
   });
