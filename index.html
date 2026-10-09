@@ -444,31 +444,46 @@
   }
 
   .text-btn:hover { background: var(--hover); }
-  /* The negative left margin leaves an 8px visual gap between the company
-     name and the icon's ink, inside the 44px target. */
+  /* A 44px invisible target around a 30px visible button. The negative left
+     margin leaves a 12px gap between the company name and the visible button. */
   .trash-btn {
+    position: relative;
     flex: none;
     width: 44px;
     height: 44px;
-    margin: -6px 0 -6px -14px;
+    margin: -6px 0 -6px -3px;
     padding: 0;
     border: 0;
-    border-radius: 10px;
     background: transparent;
     color: var(--muted);
     display: grid;
     place-items: center;
   }
 
-  .trash-btn svg { display: block; }
-
-  .trash-btn:hover,
-  .trash-btn:focus-visible {
-    color: var(--down);
-    background: var(--down-soft);
+  .trash-btn::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 
-  .trash-btn:focus-visible { outline-color: var(--down); }
+  .trash-btn svg { position: relative; display: block; }
+
+  .trash-btn:hover,
+  .trash-btn:focus-visible { color: var(--down); }
+
+  .trash-btn:hover::before,
+  .trash-btn:focus-visible::before { background: var(--down-soft); }
+
+  .trash-btn:focus-visible { outline: none; }
+
+  .trash-btn:focus-visible::before {
+    outline: 2px solid var(--down);
+    outline-offset: 2px;
+  }
 
   .hist-btn {
     flex: none;
@@ -1403,7 +1418,7 @@
       <span class="stock-name" id="s-name"></span>
     </div>
     <button type="button" class="trash-btn" id="s-remove" aria-label="Remove stock" title="Remove stock">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
         <g fill="none" stroke="currentColor" stroke-width="4">
           <path stroke-linejoin="round" d="m15 12l1.2-7h15.6l1.2 7"/>
           <path stroke-linecap="round" d="M6 12h36"/>
