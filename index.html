@@ -331,8 +331,7 @@
     color: var(--text);
   }
 
-  .tab:focus-visible,
-  .add-stock:focus-visible {
+  .tab:focus-visible {
     outline: none;
     box-shadow: inset 0 0 0 2px var(--accent);
   }
@@ -344,18 +343,26 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    font-size: 21px;
-    font-weight: 400;
-    line-height: 1;
+    border: 1px dashed var(--line);
+    background: var(--add-bg);
+    color: var(--add-fg);
     display: grid;
     place-items: center;
-    padding: 0 0 2px;
+    padding: 0;
   }
 
-  .add-stock:hover { color: var(--accent); background: var(--hover); }
+  .add-stock .add-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .add-stock:hover { background: var(--add-hover); }
+
+  .add-stock:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
 
   @media (max-width: 599px) {
     .ticker-menu { display: block; }
@@ -958,7 +965,7 @@
 
     <nav class="switcher" aria-label="Stocks">
       <div class="tabs" id="tabs" role="tablist" aria-label="Your stocks"></div>
-      <button type="button" class="add-stock" id="add-stock" aria-label="Add stock" title="Add stock">+</button>
+      <button type="button" class="add-stock" id="add-stock" aria-label="Add stock" title="Add stock"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg></button>
     </nav>
 
     <div class="first-stock">
