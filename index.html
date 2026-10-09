@@ -596,6 +596,17 @@
 
   .buy.leaving { pointer-events: none; }
 
+  .sales:empty { margin-bottom: 0; }
+
+  .row-msg {
+    grid-column: 1 / -1;
+    margin: -4px 0 0;
+    font-size: 13px;
+    color: var(--down);
+  }
+
+  .sell-results { margin-top: var(--inner-gap); }
+
   .remove {
     display: grid;
     place-items: center;
@@ -1131,6 +1142,17 @@
         <ul class="buys" id="buys"></ul>
         <button type="button" class="add" id="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another buy</button>
       </section>
+
+      <section class="card" aria-labelledby="sales-title">
+        <h2 id="sales-title">Sell shares</h2>
+        <p class="note">See how selling affects your position.</p>
+        <ul class="buys sales" id="sales"></ul>
+        <button type="button" class="add" id="add-sale"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another sale</button>
+        <div class="results sell-results" aria-live="polite">
+          <div class="cell"><span>Sale proceeds</span><output id="x-proceeds">—</output></div>
+          <div class="cell"><span>Realized profit / loss</span><output id="x-realized">—</output></div>
+        </div>
+      </section>
     </div>
 
     <div class="col col-right">
@@ -1143,8 +1165,8 @@
         </div>
 
         <div class="results avg-results" aria-live="polite">
-          <div class="cell"><span>Total invested</span><output id="a-invested">—</output></div>
-          <div class="cell"><span>Total shares</span><output id="a-shares">—</output></div>
+          <div class="cell"><span id="a-invested-label">Total invested</span><output id="a-invested">—</output></div>
+          <div class="cell"><span id="a-shares-label">Total shares</span><output id="a-shares">—</output></div>
           <div class="cell"><span>Break-even price</span><output id="a-be">—</output></div>
           <div class="cell"><span>Value at exit</span><output id="a-value">—</output></div>
           <div class="cell"><span>Profit / loss</span><output id="a-pl">—</output></div>
@@ -1182,6 +1204,16 @@
           </li>
         </ul>
         <div class="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another buy</div>
+      </section>
+
+      <section class="card">
+        <h2>Sell shares</h2>
+        <p class="note">See how selling affects your position.</p>
+        <div class="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another sale</div>
+        <div class="results sell-results">
+          <div class="cell"><span>Sale proceeds</span><span class="g-val">—</span></div>
+          <div class="cell"><span>Realized profit / loss</span><span class="g-val">—</span></div>
+        </div>
       </section>
     </div>
 
@@ -1232,7 +1264,8 @@
   "use strict";
 
   var STORAGE_V1 = "trade-calculator-v1";
-  var STORAGE_KEY = "trade-calculator-v2";
+  var STORAGE_V2 = "trade-calculator-v2";
+  var STORAGE_KEY = "trade-calculator-v3";
   var DEFAULTS = {
     entry: "18",
     exit: "22",
@@ -1248,6 +1281,8 @@
   var investedEl = $("invested");
   var buysEl = $("buys");
   var addBtn = $("add");
+  var salesEl = $("sales");
+  var addSaleBtn = $("add-sale");
   var tabsEl = $("tabs");
   var tickerSelect = $("ticker-select");
   var ADD_OPTION = "__add";
@@ -1328,38 +1363,71 @@
   // ---------- State ----------
   var state = null;
 
-  function newId() {
-    return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  function newId(prefix) {
+    return (prefix || "s") + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  // Buys and sales are transactions. Each has a stable id and a sequence number
+  // that orders it after the original order (sequence 0) and every earlier
+  // transaction, whichever section it is shown in.
+  var BUY_KEYS = ["price", "amount"];
+  var SALE_KEYS = ["price", "shares"];
+
+  function nextSeq(s) {
+    var max = 0;
+    s.buys.concat(s.sales).forEach(function (t) { if (t.seq > max) max = t.seq; });
+    return max + 1;
+  }
+
+  // Rows saved before sales existed have no id or sequence number; they are
+  // numbered in their saved order, after any rows that already have one.
+  function sequence(s) {
+    var ids = {};
+    var rows = s.buys.concat(s.sales);
+    var valid = function (seq) { return isNum(seq) && seq > 0; };
+    var next = 1;
+    rows.forEach(function (t) { if (valid(t.seq) && t.seq >= next) next = t.seq + 1; });
+    rows.forEach(function (t) {
+      if (!t.id || ids[t.id]) t.id = newId("t");
+      ids[t.id] = true;
+      if (!valid(t.seq)) t.seq = next++;
+    });
+    return s;
   }
 
   function makeStock(ticker, name, values) {
     var v = values || { entry: "", exit: "", invested: "", buys: [{ price: "", amount: "" }] };
-    return {
+    return sequence({
       id: newId(),
       ticker: ticker,
       name: name,
       entry: v.entry,
       exit: v.exit,
       invested: v.invested,
-      buys: v.buys.map(function (b) { return { price: b.price, amount: b.amount }; })
-    };
+      buys: readRows(v.buys, BUY_KEYS),
+      sales: readRows(v.sales, SALE_KEYS)
+    });
   }
 
   function str(v, fallback) { return typeof v === "string" ? v : fallback; }
 
   function isBlank(s) {
     return !s.ticker && !s.name && !s.entry && !s.exit && !s.invested &&
-      s.buys.every(function (b) { return !b.price && !b.amount; });
+      s.buys.every(function (b) { return !b.price && !b.amount; }) &&
+      s.sales.every(function (x) { return !x.price && !x.shares; });
   }
 
-  function readBuys(list) {
-    var buys = [];
+  function readRows(list, keys) {
+    var rows = [];
+    if (!Array.isArray(list)) return rows;
     for (var i = 0; i < list.length; i++) {
       var b = list[i];
       if (!b || typeof b !== "object") continue;
-      buys.push({ price: str(b.price, ""), amount: str(b.amount, "") });
+      var row = { id: str(b.id, ""), seq: b.seq };
+      keys.forEach(function (k) { row[k] = str(b[k], ""); });
+      rows.push(row);
     }
-    return buys;
+    return rows;
   }
 
   function readJSON(key) {
@@ -1371,8 +1439,9 @@
     try { return JSON.parse(raw); } catch (e) { return null; }
   }
 
-  function loadV2() {
-    var data = readJSON(STORAGE_KEY);
+  // Reads v3, or v2 (the same shape without sales or transaction order).
+  function loadStocks(key) {
+    var data = readJSON(key);
     if (!data || typeof data !== "object" || !Array.isArray(data.stocks)) return null;
     var stocks = [];
     var seen = {};
@@ -1381,15 +1450,16 @@
       if (!s || typeof s !== "object") continue;
       var id = typeof s.id === "string" && s.id && !seen[s.id] ? s.id : newId();
       seen[id] = true;
-      stocks.push({
+      stocks.push(sequence({
         id: id,
         ticker: str(s.ticker, "").toUpperCase(),
         name: str(s.name, ""),
         entry: str(s.entry, ""),
         exit: str(s.exit, ""),
         invested: str(s.invested, ""),
-        buys: Array.isArray(s.buys) ? readBuys(s.buys) : []
-      });
+        buys: readRows(s.buys, BUY_KEYS),
+        sales: readRows(s.sales, SALE_KEYS)
+      }));
     }
     if (stocks.length === 1 && isBlank(stocks[0])) stocks = [];
     if (!stocks.length) return { activeId: null, stocks: [] };
@@ -1404,13 +1474,14 @@
       entry: str(data.entry, DEFAULTS.entry),
       exit: str(data.exit, DEFAULTS.exit),
       invested: str(data.invested, DEFAULTS.invested),
-      buys: readBuys(data.buys)
+      buys: data.buys
     };
   }
 
+  // Only v3 is written; v2 and v1 stay untouched as fallbacks.
   function saveState() {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, activeId: state.activeId, stocks: state.stocks }));
     } catch (e) { /* storage unavailable or full */ }
   }
 
@@ -1440,14 +1511,37 @@
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  function rowGap() {
-    return parseFloat(getComputedStyle(buysEl).rowGap) || 0;
+  function rowGap(list) {
+    return parseFloat(getComputedStyle(list).rowGap) || 0;
+  }
+
+  // The sales list drops its bottom margin while empty, so that margin opens
+  // and closes with the list's only row.
+  function animateListMargin(list, from, to, duration) {
+    if (list.marginAnim) list.marginAnim.cancel();
+    var anim = list.animate([{ marginBottom: from }, { marginBottom: to }],
+      { duration: duration, easing: ROW_EASE, fill: "forwards" });
+    list.marginAnim = anim;
+    return anim;
+  }
+
+  function dropListMargin(list, anim) {
+    if (list.marginAnim !== anim) return;
+    list.marginAnim = null;
+    anim.cancel();
   }
 
   // The row and the list gap above it open together, so nothing below jumps.
   function revealRow(li) {
+    var list = li.parentNode;
     var h = li.offsetHeight;
-    var gap = li.previousElementSibling ? rowGap() : 0;
+    var gap = li.previousElementSibling ? rowGap(list) : 0;
+    if (list.classList.contains("sales") && (!li.previousElementSibling || list.marginAnim)) {
+      var from = list.marginAnim ? getComputedStyle(list).marginBottom : "0px";
+      var to = getComputedStyle(list).getPropertyValue("--inner-gap").trim();
+      var opening = animateListMargin(list, from, to, ROW_ADD_MS);
+      opening.onfinish = function () { dropListMargin(list, opening); };
+    }
     li.style.overflow = "hidden";
     li.animate([
       { height: "0px", marginTop: -gap + "px", opacity: 0, transform: "translateY(-3px)" },
@@ -1461,9 +1555,13 @@
   // leaves, it stops at its label strip: the next row reveals the same labels
   // when this one is removed, so the swap is invisible.
   function collapseRow(li) {
+    var list = li.parentNode;
     var next = li.nextElementSibling;
     var prev = li.previousElementSibling;
-    var gap = next || prev ? rowGap() : 0;
+    var gap = next || prev ? rowGap(list) : 0;
+    var closing = !next && !prev && list.classList.contains("sales")
+      ? animateListMargin(list, getComputedStyle(list).marginBottom, "0px", ROW_REMOVE_MS)
+      : null;
     var keepLabels = !prev && next;
     var h = li.offsetHeight;
     var end = keepLabels ? li.querySelector("input").getBoundingClientRect().top - li.getBoundingClientRect().top : 0;
@@ -1483,25 +1581,49 @@
         { opacity: 0 }
       ], { duration: ROW_REMOVE_MS, easing: ROW_EASE, fill: "forwards" });
     });
-    anim.onfinish = function () { li.remove(); };
+    anim.onfinish = function () {
+      li.remove();
+      if (closing) dropListMargin(list, closing);
+    };
   }
 
-  function createRow(price, amount, opts) {
+  var LISTS = {
+    buys: {
+      el: buysEl,
+      add: addBtn,
+      remove: "Remove this buy",
+      fields: [
+        { key: "price", cls: "b-price", id: "bp", label: "Buy price ($)" },
+        { key: "amount", cls: "b-amount", id: "ba", label: "Amount ($)" }
+      ]
+    },
+    sales: {
+      el: salesEl,
+      add: addSaleBtn,
+      remove: "Remove this sale",
+      fields: [
+        { key: "price", cls: "s-price", id: "sp", label: "Sell price ($)" },
+        { key: "shares", cls: "s-shares", id: "ss", label: "Shares sold" }
+      ]
+    }
+  };
+
+  function createRow(kind, item, opts) {
+    var list = LISTS[kind];
     rowSeq += 1;
     var id = rowSeq;
     var li = document.createElement("li");
     li.className = "buy";
-    li.innerHTML =
-      '<div><label for="bp' + id + '">Buy price ($)</label>' +
-      '<input id="bp' + id + '" class="b-price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
-      '<div><label for="ba' + id + '">Amount ($)</label>' +
-      '<input id="ba' + id + '" class="b-amount" type="number" inputmode="decimal" step="any" autocomplete="off"></div>' +
-      '<button type="button" class="remove" aria-label="Remove this buy">' +
+    li.innerHTML = list.fields.map(function (f) {
+      return '<div><label for="' + f.id + id + '">' + f.label + '</label>' +
+        '<input id="' + f.id + id + '" class="' + f.cls + '" type="number" inputmode="decimal" step="any" autocomplete="off"></div>';
+    }).join("") +
+      '<button type="button" class="remove" aria-label="' + list.remove + '">' +
       '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg>' +
-      '</button>';
-    li.querySelector(".b-price").value = price;
-    li.querySelector(".b-amount").value = amount;
-    buysEl.appendChild(li);
+      '</button>' +
+      (kind === "sales" ? '<p class="row-msg" id="rm' + id + '" aria-live="polite" hidden></p>' : "");
+    list.fields.forEach(function (f) { li.querySelector("." + f.cls).value = item[f.key]; });
+    list.el.appendChild(li);
     if (opts && opts.animate && motionOK()) revealRow(li);
     return li;
   }
@@ -1571,7 +1693,10 @@
     exitEl.value = s.exit;
     investedEl.value = s.invested;
     buysEl.innerHTML = "";
-    for (var i = 0; i < s.buys.length; i++) createRow(s.buys[i].price, s.buys[i].amount);
+    salesEl.innerHTML = "";
+    if (salesEl.marginAnim) dropListMargin(salesEl, salesEl.marginAnim);
+    s.buys.forEach(function (b) { createRow("buys", b); });
+    s.sales.forEach(function (x) { createRow("sales", x); });
     calculate();
   }
 
@@ -1611,34 +1736,134 @@
     setOut($("o-ret"), fmtPct(ret), ret);
 
     // Section 2 — the original order counts as the first buy
-    var totalShares = orderValid ? shares : 0;
-    var totalInvested = orderValid ? invested : 0;
-    for (var i = 0; i < s.buys.length; i++) {
-      var p = parse(s.buys[i].price);
-      var a = parse(s.buys[i].amount);
-      if (p > 0 && a > 0) {
-        totalShares += a / p;
-        totalInvested += a;
-      }
+    var pos = replay(s, orderValid ? shares : 0, orderValid ? invested : 0);
+    showSaleNotes(pos.notes);
+
+    // Once a sale counts, the results describe the shares still held.
+    var hasSales = pos.sold > 0 || pos.failed;
+    var held = pos.shares;
+    var basis = pos.basis;
+    var avg;
+    if (pos.failed) {
+      held = basis = avg = NaN;
+    } else if (hasSales) {
+      avg = held > 0 ? pos.avg : NaN;
+    } else {
+      if (!(held > 0 && basis > 0)) { held = NaN; basis = NaN; }
+      avg = basis / held;
     }
 
-    var hasPosition = totalShares > 0 && totalInvested > 0;
-    if (!hasPosition) { totalShares = NaN; totalInvested = NaN; }
-
-    var avg = totalInvested / totalShares;
     var drop = entry > 0 ? (avg - entry) / entry * 100 : NaN;
-    var tValue = exitValid ? totalShares * exit : NaN;
-    var tPl = tValue - totalInvested;
-    var tRet = tPl / totalInvested * 100;
+    var tValue = exitValid ? held * exit : NaN;
+    var tPl = tValue - basis;
+    var tRet = tPl / basis * 100;
 
     setOut($("a-avg"), fmtPrice(avg));
     $("a-sub").textContent = "Was " + fmtPrice(entry > 0 ? entry : NaN) + " · " + fmtPct(drop) + " vs your entry";
-    setOut($("a-invested"), fmtMoney(totalInvested));
-    setOut($("a-shares"), fmtShares(totalShares));
+    $("a-invested-label").textContent = hasSales ? "Remaining cost basis" : "Total invested";
+    $("a-shares-label").textContent = hasSales ? "Shares remaining" : "Total shares";
+    setOut($("a-invested"), fmtMoney(basis));
+    setOut($("a-shares"), fmtShares(held));
     setOut($("a-be"), fmtPrice(avg));
     setOut($("a-value"), fmtMoney(tValue));
     setOut($("a-pl"), fmtMoney(tPl), tPl);
     setOut($("a-ret"), fmtPct(tRet), tRet);
+
+    // Section 3 — realized results of the sales, kept apart from the projection
+    var counted = pos.sold > 0 && !pos.failed;
+    var proceeds = counted ? pos.proceeds : NaN;
+    var realized = counted ? pos.realized : NaN;
+    if (Math.abs(realized) < 0.005) realized = 0;
+    setOut($("x-proceeds"), fmtMoney(proceeds));
+    setOut($("x-realized"), fmtMoney(realized), realized);
+  }
+
+  // Shares typed as held to the displayed 4 decimal places count as all of them.
+  var SHARE_TOLERANCE = 0.00005;
+
+  // Weighted-average cost, replayed in transaction order. A buy adds its shares
+  // and cost. A sale removes shares at the average cost of that moment, which
+  // it leaves unchanged; its realized result is proceeds minus the cost removed.
+  // A sale that cannot be made stops the replay: nothing after it is known.
+  function replay(s, orderShares, orderCost) {
+    var shares = orderShares;
+    var basis = orderCost;
+    var avg = shares > 0 ? basis / shares : NaN;
+    var r = { proceeds: 0, realized: 0, sold: 0, failed: false, notes: [] };
+    var steps = s.buys.map(function (t, i) { return { t: t, i: i, sale: 0 }; })
+      .concat(s.sales.map(function (t, i) { return { t: t, i: i, sale: 1 }; }))
+      .sort(function (a, b) { return a.t.seq - b.t.seq || a.sale - b.sale || a.i - b.i; });
+
+    for (var k = 0; k < steps.length; k++) {
+      var t = steps[k].t;
+      var price = parse(t.price);
+      if (!steps[k].sale) {
+        var amount = parse(t.amount);
+        if (price > 0 && amount > 0) {
+          shares += amount / price;
+          basis += amount;
+          avg = basis / shares;
+        }
+        continue;
+      }
+
+      var qty = parse(t.shares);
+      var note = null;
+      if (t.price.trim() !== "" && !(price >= 0)) note = { field: "s-price", text: "Enter a sell price of $0 or more." };
+      else if (t.shares.trim() !== "" && !(qty > 0)) note = { field: "s-shares", text: "Enter shares sold above 0." };
+      else if (isNaN(price) || isNaN(qty)) continue;
+      else if (!(shares > 0)) note = { field: "s-shares", text: "No shares available to sell." };
+      else if (qty > shares + SHARE_TOLERANCE) {
+        var held = fmtShares(shares);
+        note = { field: "s-shares", text: "Only " + held + (held === "1" ? " share" : " shares") + " available to sell." };
+      }
+      if (note) {
+        r.notes[steps[k].i] = note;
+        r.failed = true;
+        break;
+      }
+
+      var closes = qty >= shares - SHARE_TOLERANCE;
+      if (closes) qty = shares;
+      var cost = qty * avg;
+      r.proceeds += qty * price;
+      r.realized += qty * price - cost;
+      r.sold += 1;
+      if (closes) {
+        shares = 0;
+        basis = 0;
+        avg = NaN;
+      } else {
+        shares -= qty;
+        basis -= cost;
+      }
+    }
+
+    r.shares = shares;
+    r.basis = basis;
+    r.avg = avg;
+    return r;
+  }
+
+  function showSaleNotes(notes) {
+    var rows = liveRows(salesEl);
+    for (var i = 0; i < rows.length; i++) {
+      var note = notes[i] || null;
+      var msg = rows[i].querySelector(".row-msg");
+      var text = note ? note.text : "";
+      if (msg.textContent !== text) msg.textContent = text;
+      msg.hidden = !note;
+      LISTS.sales.fields.forEach(function (f) {
+        var input = rows[i].querySelector("." + f.cls);
+        if (note && note.field === f.cls) {
+          input.setAttribute("aria-invalid", "true");
+          input.setAttribute("aria-describedby", msg.id);
+        } else {
+          input.removeAttribute("aria-invalid");
+          input.removeAttribute("aria-describedby");
+        }
+      });
+    }
   }
 
   // ---------- Calculator events ----------
@@ -1657,49 +1882,57 @@
   bindField(exitEl, "exit");
   bindField(investedEl, "invested");
 
-  function liveRows() {
-    return buysEl.querySelectorAll(".buy:not(.leaving)");
+  function liveRows(list) {
+    return list.querySelectorAll(".buy:not(.leaving)");
   }
 
-  function rowIndex(li) {
-    return Array.prototype.indexOf.call(liveRows(), li);
+  function rowIndex(list, li) {
+    return Array.prototype.indexOf.call(liveRows(list), li);
   }
 
-  buysEl.addEventListener("input", function (e) {
-    var li = e.target.closest(".buy");
-    if (!li) return;
-    var buy = active().buys[rowIndex(li)];
-    if (!buy) return;
-    if (e.target.classList.contains("b-price")) buy.price = e.target.value;
-    else if (e.target.classList.contains("b-amount")) buy.amount = e.target.value;
-    onChange();
-  });
+  Object.keys(LISTS).forEach(function (kind) {
+    var list = LISTS[kind];
 
-  buysEl.addEventListener("click", function (e) {
-    var btn = e.target.closest(".remove");
-    if (!btn) return;
-    var li = btn.closest(".buy");
-    var idx = rowIndex(li);
-    if (idx < 0) return;
+    list.el.addEventListener("input", function (e) {
+      var li = e.target.closest(".buy");
+      if (!li) return;
+      var item = active()[kind][rowIndex(list.el, li)];
+      if (!item) return;
+      list.fields.forEach(function (f) {
+        if (e.target.classList.contains(f.cls)) item[f.key] = e.target.value;
+      });
+      onChange();
+    });
 
-    var rows = liveRows();
-    var neighbour = rows[idx + 1] || rows[idx - 1];
-    var hadFocus = li.contains(document.activeElement);
+    list.el.addEventListener("click", function (e) {
+      var btn = e.target.closest(".remove");
+      if (!btn) return;
+      var li = btn.closest(".buy");
+      var idx = rowIndex(list.el, li);
+      if (idx < 0) return;
 
-    active().buys.splice(idx, 1);
-    onChange();
-    li.classList.add("leaving");
-    li.inert = true;
-    if (hadFocus) (neighbour ? neighbour.querySelector(".remove") : addBtn).focus({ preventScroll: true });
+      var rows = liveRows(list.el);
+      var neighbour = rows[idx + 1] || rows[idx - 1];
+      var hadFocus = li.contains(document.activeElement);
 
-    if (motionOK()) collapseRow(li);
-    else li.remove();
-  });
+      active()[kind].splice(idx, 1);
+      li.classList.add("leaving");
+      li.inert = true;
+      onChange();
+      if (hadFocus) (neighbour ? neighbour.querySelector(".remove") : list.add).focus({ preventScroll: true });
 
-  addBtn.addEventListener("click", function () {
-    active().buys.push({ price: "", amount: "" });
-    createRow("", "", { animate: true });
-    onChange();
+      if (motionOK()) collapseRow(li);
+      else li.remove();
+    });
+
+    list.add.addEventListener("click", function () {
+      var s = active();
+      var item = { id: newId("t"), seq: nextSeq(s) };
+      list.fields.forEach(function (f) { item[f.key] = ""; });
+      s[kind].push(item);
+      createRow(kind, item, { animate: true });
+      onChange();
+    });
   });
 
   // ---------- Stock management ----------
@@ -2105,7 +2338,7 @@
   });
 
   // ---------- Init (never writes to storage) ----------
-  state = loadV2();
+  state = loadStocks(STORAGE_KEY) || loadStocks(STORAGE_V2);
   if (!state) {
     var restored = loadV1();
     var migrated = restored && makeStock("", "", restored);
