@@ -125,7 +125,7 @@
     letter-spacing: -0.015em;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 3px;
   }
 
   .logo {
@@ -176,6 +176,7 @@
     display: flex;
     align-items: center;
     margin-bottom: 2px;
+    min-height: 24px;
   }
 
   /* ---------- Market session ---------- */
@@ -184,6 +185,7 @@
     flex: none;
     display: grid;
     place-items: center;
+    align-self: center;
     width: 22px;
     height: 24px;
     padding: 0;
@@ -213,7 +215,13 @@
 
   .session-dot:focus-visible { outline-offset: -4px; }
 
-  .session { position: relative; display: flex; }
+  .session {
+    position: relative;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    flex: none;
+  }
 
   /* Offsets are from the centre of the 6px dot: 3px radius + 10px gap. */
   .session-tip {
