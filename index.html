@@ -760,16 +760,19 @@
   }
 
   /* ---------- Floating stock indicator ---------- */
+  /* vertical-rl turns Latin text 90° clockwise and makes the layout box itself
+     vertical, so its measured width is the visible width. */
   .float-stock {
     position: fixed;
-    top: calc(10px + env(safe-area-inset-top));
-    left: 50%;
+    top: calc(16px + env(safe-area-inset-top));
+    left: 0;
     z-index: 5;
     display: flex;
     align-items: baseline;
     gap: 8px;
-    max-width: calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));
-    padding: 7px 16px;
+    writing-mode: vertical-rl;
+    max-height: calc(100vh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 16px 7px;
     border: 1px solid var(--glass-line);
     border-radius: 999px;
     background: var(--glass);
@@ -781,15 +784,13 @@
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -6px);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
   }
 
-  .float-stock.shown {
+  .float-stock.shown.fits {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, 0);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.2s ease;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1149,6 +1150,15 @@
       floatEl.classList.toggle("shown", state.stocks.length > 0 && !e.isIntersecting && e.boundingClientRect.bottom <= 0);
     }).observe(document.querySelector(".stock-head"));
   }
+
+  function placeFloat() {
+    var card = document.querySelector("main .card").getBoundingClientRect();
+    var left = card.right + 6;
+    var fits = card.width > 0 && left + floatEl.offsetWidth + 8 <= document.documentElement.clientWidth;
+    floatEl.style.left = fits ? left + "px" : "0px";
+    floatEl.classList.toggle("fits", fits);
+  }
+  window.addEventListener("resize", placeFloat);
   var picker = $("picker");
   var qEl = $("q");
   var firstQ = $("first-q");
@@ -1399,6 +1409,7 @@
     }
     renderTabs();
     renderStock();
+    placeFloat();
   }
 
   // ---------- Calculation ----------
