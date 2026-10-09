@@ -34,6 +34,9 @@
     --ghost-text: #a0a9a3;
     --backdrop: rgba(15, 21, 18, 0.28);
     --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
+    --add-bg: #252a27;
+    --add-hover: #2f3531;
+    --add-fg: #ffffff;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
@@ -59,6 +62,8 @@
       --ghost-text: #6b6b6b;
       --backdrop: rgba(0, 0, 0, 0.5);
       --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
+      --add-bg: #2a2a2a;
+      --add-hover: #333333;
     }
   }
 
@@ -574,18 +579,32 @@
   .remove:hover { color: var(--down); background: var(--hover); }
 
   .add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
     font-size: 15px;
-    color: var(--hero);
-    background: transparent;
+    font-weight: 500;
+    color: var(--add-fg);
+    background: var(--add-bg);
     border: 1px dashed var(--line);
     border-radius: 12px;
     padding: 10px;
   }
 
-  .add:hover { border-color: var(--hero); background: var(--hover); }
+  .add-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
 
-  .add:focus-visible { outline-color: var(--hero); }
+  .add:hover { background: var(--add-hover); }
+
+  .add:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
 
   .hero {
     background: var(--hero);
@@ -728,9 +747,11 @@
 
   .ghost .add {
     color: var(--ghost-text);
+    background: transparent;
     border-color: var(--ghost-line);
-    text-align: center;
   }
+
+  .ghost .add .add-icon { color: var(--ghost-text); }
 
   .ghost .hero {
     background: var(--ghost-hero);
@@ -993,7 +1014,7 @@
         <h2 id="buys-title">Additional buys</h2>
         <p class="note">Buy lower to reduce your average cost.</p>
         <ul class="buys" id="buys"></ul>
-        <button type="button" class="add" id="add">Add another buy</button>
+        <button type="button" class="add" id="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another buy</button>
       </section>
     </div>
 
@@ -1045,7 +1066,7 @@
             <div class="remove"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" focusable="false"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
           </li>
         </ul>
-        <div class="add">Add another buy</div>
+        <div class="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another buy</div>
       </section>
     </div>
 
