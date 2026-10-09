@@ -34,9 +34,11 @@
     --ghost-text: #a0a9a3;
     --backdrop: rgba(15, 21, 18, 0.28);
     --sheet: 0 12px 36px rgba(22, 32, 27, 0.16);
-    --add-bg: var(--field);
-    --add-hover: var(--hover);
-    --add-fg: var(--text);
+    --focus: #111111;
+    --add-stock-icon: #111111;
+    --cta-bg: #111111;
+    --cta-fg: #ffffff;
+    --cta-hover: #252525;
     --inner-gap: 14px;
     color-scheme: light dark;
   }
@@ -63,6 +65,11 @@
       --ghost-text: #6b6b6b;
       --backdrop: rgba(0, 0, 0, 0.5);
       --sheet: 0 12px 36px rgba(0, 0, 0, 0.5);
+      --focus: #f5f5f5;
+      --add-stock-icon: #f5f5f5;
+      --cta-bg: #f5f5f5;
+      --cta-fg: #111111;
+      --cta-hover: #e8e8e8;
     }
   }
 
@@ -285,9 +292,10 @@
   .ticker-menu select:hover { border-color: var(--muted); }
 
   .ticker-menu select:focus-visible {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
+    outline: 2px solid var(--focus);
+    outline-offset: 0;
+    border-color: var(--line);
+    box-shadow: none;
   }
   .switcher {
     display: flex;
@@ -336,33 +344,26 @@
 
   .tab.untitled { font-weight: 500; font-style: italic; }
 
-  .add-stock,
-  .add {
-    color: var(--add-fg);
-    background: var(--add-bg);
-    border: 1px solid var(--line);
-  }
-
-  .add-stock:hover,
-  .add:hover { background: var(--add-hover); }
-
-  .add-stock:active,
-  .add:active { background: var(--hover); }
-
-  .add-stock:focus-visible,
-  .add:focus-visible {
-    outline: 2px solid var(--muted);
-    outline-offset: 2px;
-  }
-
   .add-stock {
     flex: none;
     width: 32px;
     height: 32px;
     border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--add-stock-icon);
     display: grid;
     place-items: center;
     padding: 0;
+  }
+
+  .add-stock:hover { background: var(--hover); }
+
+  .add-stock:active { background: var(--hover); }
+
+  .add-stock:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
 
   .add-stock .add-icon {
@@ -511,10 +512,12 @@
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-  input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
+  input:focus,
+  input:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 0;
+    border-color: var(--line);
+    box-shadow: none;
   }
 
   button:focus-visible {
@@ -600,9 +603,22 @@
     gap: 8px;
     width: 100%;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--cta-fg);
+    background: var(--cta-bg);
+    border: 0;
     border-radius: 12px;
     padding: 10px;
+    min-height: 43.75px;
+  }
+
+  .add:hover { background: var(--cta-hover); }
+
+  .add:active { background: var(--cta-hover); }
+
+  .add:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
 
   .add-icon {
@@ -753,8 +769,12 @@
   .ghost .add {
     color: var(--ghost-text);
     background: transparent;
-    border-color: var(--ghost-line);
+    border: 1px solid var(--ghost-line);
+    font-weight: 500;
   }
+
+  .ghost .add:hover,
+  .ghost .add:active { background: transparent; }
 
   .ghost .add .add-icon { color: var(--ghost-text); }
 
