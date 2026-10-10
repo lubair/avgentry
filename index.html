@@ -455,7 +455,7 @@
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--down);
+    color: var(--muted);
     display: grid;
     place-items: center;
     transition: color 0.15s ease;
@@ -469,17 +469,17 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    background: var(--down-soft);
+    background: var(--tab-active);
     transition: background-color 0.15s ease;
   }
 
   .trash-btn svg { position: relative; display: block; }
 
   .trash-btn:hover,
-  .trash-btn:focus-visible { color: #ffffff; }
+  .trash-btn:focus-visible { color: var(--down); }
 
   .trash-btn:hover::before,
-  .trash-btn:focus-visible::before { background: var(--down); }
+  .trash-btn:focus-visible::before { background: var(--down-soft); }
 
   @media (prefers-reduced-motion: reduce) {
     .trash-btn,
