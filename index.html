@@ -680,6 +680,15 @@
 
   .sell-results { margin-top: var(--inner-gap); }
 
+  .sale-note {
+    margin: 8px 2px 0;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .ghost .sale-note { color: var(--ghost-text); }
+
   .remove {
     display: grid;
     place-items: center;
@@ -1547,8 +1556,9 @@
         <button type="button" class="add" id="add-sale"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another sale</button>
         <div class="results sell-results" aria-live="polite">
           <div class="cell"><span>Sale proceeds</span><output id="x-proceeds">—</output></div>
-          <div class="cell"><span>Realized profit / loss</span><output id="x-realized">—</output></div>
+          <div class="cell"><span>Estimated sale P/L</span><output id="x-estimate" aria-describedby="x-estimate-note">—</output></div>
         </div>
+        <p class="sale-note" id="x-estimate-note">Estimated using your average purchase cost before the sale. This may differ from broker-reported realized P/L.</p>
       </section>
     </div>
 
@@ -1612,8 +1622,9 @@
         <div class="add"><svg class="add-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 3.25v9.5M3.25 8h9.5"/></svg>Add another sale</div>
         <div class="results sell-results">
           <div class="cell"><span>Sale proceeds</span><span class="g-val">—</span></div>
-          <div class="cell"><span>Realized profit / loss</span><span class="g-val">—</span></div>
+          <div class="cell"><span>Estimated sale P/L</span><span class="g-val">—</span></div>
         </div>
+        <p class="sale-note">Estimated using your average purchase cost before the sale. This may differ from broker-reported realized P/L.</p>
       </section>
     </div>
 
@@ -2485,13 +2496,13 @@
     setOut($("a-pl"), fmtMoney(tPl), tPl);
     setOut($("a-ret"), fmtPct(tRet), tRet);
 
-    // Section 3 — realized results of the sales, kept apart from the projection
+    // Section 3 — results of the sales, kept apart from the projection
     var counted = pos.sold > 0 && !pos.failed;
     var proceeds = counted ? pos.proceeds : NaN;
-    var realized = counted ? pos.realized : NaN;
-    if (Math.abs(realized) < 0.005) realized = 0;
+    var estimate = counted ? pos.estimate : NaN;
+    if (Math.abs(estimate) < 0.005) estimate = 0;
     setOut($("x-proceeds"), fmtMoney(proceeds));
-    setOut($("x-realized"), fmtMoney(realized), realized);
+    setOut($("x-estimate"), fmtMoney(estimate), estimate);
   }
 
   // Shares typed as held to the displayed 4 decimal places count as all of them.
@@ -2501,8 +2512,8 @@
   // its shares and cost, commission included; the original order is the
   // oldest lot. A sale consumes shares from the oldest lots first; a partly
   // consumed lot gives up its cost, commission included, in proportion to the
-  // shares taken. A sale's realized result is its net proceeds (shares × price
-  // − its commission) minus the cost of the consumed shares. The remaining
+  // shares taken. A sale's FIFO realized result is its net proceeds (shares ×
+  // price − its commission) minus the cost of the consumed shares. The remaining
   // position is the sum of the surviving lots, so a sale can change the
   // average cost. A sale that cannot be made stops the replay: nothing after
   // it is known.
@@ -2511,7 +2522,7 @@
     if (orderShares > 0) lots.push({ shares: orderShares, basis: orderCost });
     var shares = orderShares;
     var basis = orderCost;
-    var r = { proceeds: 0, realized: 0, sold: 0, failed: false, notes: [] };
+    var r = { proceeds: 0, realized: 0, estimate: 0, sold: 0, failed: false, notes: [] };
     var steps = s.buys.map(function (t, i) { return { t: t, i: i, sale: 0 }; })
       .concat(s.sales.map(function (t, i) { return { t: t, i: i, sale: 1 }; }))
       .sort(function (a, b) { return a.t.seq - b.t.seq || a.sale - b.sale || a.i - b.i; });
@@ -2556,6 +2567,10 @@
       var closes = qty >= shares - SHARE_TOLERANCE;
       if (closes) qty = shares;
 
+      // Shown as the sale's P/L: priced at the average cost of everything held
+      // just before the sale. It is display only and never feeds the lots.
+      var avgBefore = basis / shares;
+
       // Consume the oldest lots first.
       var cost = 0;
       var left = qty;
@@ -2580,10 +2595,12 @@
       }
 
       var net = qty * price - fee;
+      var estimate = net - qty * avgBefore;
       r.proceeds += net;
       r.realized += net - cost;
+      r.estimate += estimate;
       r.sold += 1;
-      steps[k].res = { counted: true, shares: qty, proceeds: net, realized: net - cost };
+      steps[k].res = { counted: true, shares: qty, proceeds: net, realized: net - cost, estimate: estimate };
 
       shares = 0;
       basis = 0;
@@ -3009,15 +3026,15 @@
         (hasFee(t.fee) ? " · Commission " + fmtRaw(t.fee, "money") : "") +
         (res && res.counted ? (hasFee(t.fee) ? " · Net proceeds " : " · Proceeds ") + fmtMoney(res.proceeds) : ""))];
       if (res && res.counted) {
-        var pl = Math.abs(res.realized) < 0.005 ? 0 : res.realized;
-        lines.push(line("Realized profit / loss " + fmtMoney(pl), pl > 0 ? "up" : pl < 0 ? "down" : ""));
+        var pl = Math.abs(res.estimate) < 0.005 ? 0 : res.estimate;
+        lines.push(line("Estimated sale P/L " + fmtMoney(pl), pl > 0 ? "up" : pl < 0 ? "down" : ""));
       } else if (res && res.note) lines.push(line(res.note, "down"));
       else if (res) lines.push(line("Incomplete, so not included in calculations"));
       else lines.push(line("Not calculated: an earlier sale exceeds the shares held"));
       items.push(txItem(n, "Sale", "Sell", lines, t.at));
     });
     panelTx.innerHTML =
-      '<p class="hist-note">Planned transactions in the order they were added to AVG Entry. Realized results use FIFO: each sale consumes the oldest purchased shares first. Times show when a transaction was added here, not when it was executed.</p>' +
+      '<p class="hist-note">Planned transactions in the order they were added to AVG Entry. The remaining position uses FIFO: each sale consumes the oldest purchased shares first. Sale P/L is estimated using your average purchase cost before each sale and may differ from broker-reported realized P/L. Times show when a transaction was added here, not when it was executed.</p>' +
       savedNote() +
       (items.length ? '<ul class="hist-list">' + items.join("") + "</ul>" : '<p class="hist-note">No saved transactions yet.</p>');
   }
