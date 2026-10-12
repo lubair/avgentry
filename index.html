@@ -530,7 +530,7 @@
 
   .inputs {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: var(--inner-gap);
   }
@@ -621,9 +621,41 @@
   .buy {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 10px;
     align-items: end;
+  }
+
+  .lbl-short { display: none; }
+
+  /* Amount / shares entry: the in-field unit switches what the field holds. */
+  .qty-wrap { position: relative; }
+
+  .qty-wrap input { padding-right: 38px; }
+
+  .unit {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    min-width: 28px;
+    height: 26px;
+    margin-top: -13px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--tab-active);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 26px;
+  }
+
+  .unit:hover { color: var(--text); background: var(--hover); }
+
+  .unit::after {
+    content: "";
+    position: absolute;
+    inset: -9px -6px;
   }
 
   .buy + .buy label {
@@ -1367,6 +1399,13 @@
     .text-btn { padding: 10px 12px; }
   }
 
+  @media (max-width: 599px) {
+    .inputs { grid-template-columns: repeat(2, 1fr); }
+    .buy { grid-template-columns: 1fr 1fr 0.8fr auto; gap: 8px; }
+    .buy .lbl-long { display: none; }
+    .buy .lbl-short { display: inline; }
+  }
+
   @media (max-width: 419px) {
     .inputs { grid-template-columns: 1fr; }
     .avg-results .cell { padding: 10px; }
@@ -1475,8 +1514,15 @@
             <input id="exit" type="number" inputmode="decimal" step="any" autocomplete="off">
           </div>
           <div>
-            <label for="invested">Invested ($)</label>
-            <input id="invested" type="number" inputmode="decimal" step="any" autocomplete="off">
+            <label for="invested" id="invested-label">Invested ($)</label>
+            <div class="qty-wrap">
+              <input id="invested" type="number" inputmode="decimal" step="any" autocomplete="off">
+              <button type="button" class="unit" id="order-unit" aria-label="Enter shares instead" title="Enter shares instead">$</button>
+            </div>
+          </div>
+          <div>
+            <label for="order-fee">Commission ($)</label>
+            <input id="order-fee" type="number" inputmode="decimal" step="any" autocomplete="off" placeholder="0">
           </div>
         </div>
         <div class="results" aria-live="polite">
@@ -1536,6 +1582,7 @@
           <div><label>Entry price ($)</label><div class="g-field"></div></div>
           <div><label>Exit price ($)</label><div class="g-field"></div></div>
           <div><label>Invested ($)</label><div class="g-field"></div></div>
+          <div><label>Commission ($)</label><div class="g-field"></div></div>
         </div>
         <div class="results">
           <div class="cell"><span>Shares</span><span class="g-val">—</span></div>
@@ -1552,6 +1599,7 @@
           <li class="buy">
             <div><label>Buy price ($)</label><div class="g-field"></div></div>
             <div><label>Amount ($)</label><div class="g-field"></div></div>
+            <div><label><span class="lbl-long">Commission</span><span class="lbl-short">Fee</span> ($)</label><div class="g-field"></div></div>
             <div class="remove"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" focusable="false"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></div>
           </li>
         </ul>
@@ -1665,6 +1713,9 @@
   var entryEl = $("entry");
   var exitEl = $("exit");
   var investedEl = $("invested");
+  var investedLabel = $("invested-label");
+  var orderUnit = $("order-unit");
+  var orderFeeEl = $("order-fee");
   var buysEl = $("buys");
   var addBtn = $("add");
   var salesEl = $("sales");
@@ -1756,8 +1807,15 @@
   // Buys and sales are transactions. Each has a stable id and a sequence number
   // that orders it after the original order (sequence 0) and every earlier
   // transaction, whichever section it is shown in.
-  var BUY_KEYS = ["price", "amount"];
-  var SALE_KEYS = ["price", "shares"];
+  // A purchase is entered as a dollar amount (mode "") or an exact share count
+  // (mode "shares"); both values are kept so switching back loses nothing.
+  // fee is an optional commission; blank counts as $0.
+  var BUY_KEYS = ["price", "amount", "shares", "mode", "fee"];
+  var SALE_KEYS = ["price", "shares", "fee"];
+  var BUY_EXTRAS = ["shares", "mode", "fee"];
+  var SALE_EXTRAS = ["fee"];
+
+  function byShares(t) { return t.mode === "shares"; }
 
   function nextSeq(s) {
     var max = 0;
@@ -1790,6 +1848,9 @@
       entry: v.entry,
       exit: v.exit,
       invested: v.invested,
+      qty: str(v.qty, ""),
+      mode: v.mode === "shares" ? "shares" : "",
+      fee: str(v.fee, ""),
       buys: readRows(v.buys, BUY_KEYS),
       sales: readRows(v.sales, SALE_KEYS)
     });
@@ -1798,9 +1859,9 @@
   function str(v, fallback) { return typeof v === "string" ? v : fallback; }
 
   function isBlank(s) {
-    return !s.ticker && !s.name && !s.entry && !s.exit && !s.invested &&
-      s.buys.every(function (b) { return !b.price && !b.amount; }) &&
-      s.sales.every(function (x) { return !x.price && !x.shares; });
+    return !s.ticker && !s.name && !s.entry && !s.exit && !s.invested && !s.qty && !s.fee &&
+      s.buys.every(function (b) { return !b.price && !b.amount && !b.shares && !b.fee; }) &&
+      s.sales.every(function (x) { return !x.price && !x.shares && !x.fee; });
   }
 
   function readRows(list, keys) {
@@ -1811,6 +1872,7 @@
       if (!b || typeof b !== "object") continue;
       var row = { id: str(b.id, ""), seq: b.seq };
       keys.forEach(function (k) { row[k] = str(b[k], ""); });
+      if ("mode" in row && row.mode !== "shares") row.mode = "";
       if (isNum(b.at)) row.at = b.at;
       rows.push(row);
     }
@@ -1847,6 +1909,9 @@
         entry: str(s.entry, ""),
         exit: str(s.exit, ""),
         invested: str(s.invested, ""),
+        qty: str(s.qty, ""),
+        mode: s.mode === "shares" ? "shares" : "",
+        fee: str(s.fee, ""),
         buys: readRows(s.buys, BUY_KEYS),
         sales: readRows(s.sales, SALE_KEYS)
       }));
@@ -1933,40 +1998,58 @@
   // ---------- Snapshots ----------
   // A snapshot is a self-contained copy of a stock's editable data: its order
   // inputs and each buy and sale row as [id, seq, price, amount or shares,
-  // time added]. Edit history stores only these; results are recalculated.
-  function rowTuple(r, key) {
+  // time added, extras]. Extras (share count, entry mode, commission) and the
+  // order's q/m/f appear only when set, so data without them snapshots exactly
+  // as it did before they existed. Edit history stores only these; results
+  // are recalculated.
+  function rowTuple(r, key, extraKeys) {
     var t = [r.id, r.seq, r.price, r[key]];
-    if (isNum(r.at)) t.push(r.at);
+    var extras = null;
+    extraKeys.forEach(function (k) {
+      if (r[k]) (extras = extras || {})[k] = r[k];
+    });
+    if (isNum(r.at) || extras) t.push(isNum(r.at) ? r.at : null);
+    if (extras) t.push(extras);
     return t;
   }
 
-  function tupleRow(t, key) {
+  function tupleRow(t, key, extraKeys) {
     var r = { id: str(t[0], ""), seq: t[1], price: str(t[2], "") };
     r[key] = str(t[3], "");
+    var extras = t[5] && typeof t[5] === "object" ? t[5] : {};
+    extraKeys.forEach(function (k) { r[k] = str(extras[k], ""); });
+    if ("mode" in r && r.mode !== "shares") r.mode = "";
     if (isNum(t[4])) r.at = t[4];
     return r;
   }
 
   function snap(s) {
-    return {
+    var p = {
       e: s.entry,
       x: s.exit,
       i: s.invested,
-      b: s.buys.map(function (r) { return rowTuple(r, "amount"); }),
-      s: s.sales.map(function (r) { return rowTuple(r, "shares"); })
+      b: s.buys.map(function (r) { return rowTuple(r, "amount", BUY_EXTRAS); }),
+      s: s.sales.map(function (r) { return rowTuple(r, "shares", SALE_EXTRAS); })
     };
+    if (s.qty) p.q = s.qty;
+    if (byShares(s)) p.m = "shares";
+    if (s.fee) p.f = s.fee;
+    return p;
   }
 
   function unsnap(p) {
-    var rows = function (list, key) {
-      return (Array.isArray(list) ? list : []).filter(Array.isArray).map(function (t) { return tupleRow(t, key); });
+    var rows = function (list, key, extraKeys) {
+      return (Array.isArray(list) ? list : []).filter(Array.isArray).map(function (t) { return tupleRow(t, key, extraKeys); });
     };
     return sequence({
       entry: str(p.e, ""),
       exit: str(p.x, ""),
       invested: str(p.i, ""),
-      buys: rows(p.b, "amount"),
-      sales: rows(p.s, "shares")
+      qty: str(p.q, ""),
+      mode: p.m === "shares" ? "shares" : "",
+      fee: str(p.f, ""),
+      buys: rows(p.b, "amount", BUY_EXTRAS),
+      sales: rows(p.s, "shares", SALE_EXTRAS)
     });
   }
 
@@ -1981,7 +2064,10 @@
   }
 
   function cloneData(s) {
-    return { entry: s.entry, exit: s.exit, invested: s.invested, buys: cloneRows(s.buys), sales: cloneRows(s.sales) };
+    return {
+      entry: s.entry, exit: s.exit, invested: s.invested, qty: s.qty, mode: s.mode, fee: s.fee,
+      buys: cloneRows(s.buys), sales: cloneRows(s.sales)
+    };
   }
 
   // ---------- Drafts ----------
@@ -2009,20 +2095,46 @@
     return !!draft && (draft.orphan || draft.base !== snapKey(active()));
   }
 
+  // A blank commission is $0; anything else must be a number of $0 or more.
+  function feeOf(raw) {
+    return typeof raw !== "string" || raw.trim() === "" ? 0 : parse(raw);
+  }
+
+  // One purchase: shares bought and their cost basis, gross value plus
+  // commission. In shares mode the share count is exact; in amount mode it is
+  // the dollar amount divided by the price.
+  function purchase(priceRaw, mode, amountRaw, sharesRaw, feeRaw) {
+    var price = parse(priceRaw);
+    var fee = feeOf(feeRaw);
+    var shares;
+    var gross;
+    if (mode === "shares") {
+      shares = parse(sharesRaw);
+      gross = shares * price;
+    } else {
+      gross = parse(amountRaw);
+      shares = gross / price;
+    }
+    var counted = price > 0 && shares > 0 && gross > 0 && fee >= 0;
+    return { counted: counted, shares: shares, gross: gross, fee: fee, cost: gross + fee };
+  }
+
+  function orderLot(s) {
+    return purchase(s.entry, s.mode, s.invested, s.qty, s.fee);
+  }
+
   function replayOf(s) {
-    var entry = parse(s.entry);
-    var invested = parse(s.invested);
-    var ok = entry > 0 && invested > 0;
-    return replay(s, ok ? invested / entry : 0, ok ? invested : 0);
+    var lot = orderLot(s);
+    return replay(s, lot.counted ? lot.shares : 0, lot.counted ? lot.cost : 0);
   }
 
   // Blank and incomplete inputs are legitimate; negative values, sales the
   // position can't cover and damaged transaction data are not.
   function draftProblem(d) {
-    var raws = [d.entry, d.exit, d.invested];
-    d.buys.forEach(function (b) { raws.push(b.price, b.amount); });
-    d.sales.forEach(function (x) { raws.push(x.price, x.shares); });
-    if (raws.some(function (r) { return r.trim() !== "" && !(parse(r) >= 0); })) return "Negative or invalid numbers can't be saved.";
+    var raws = [d.entry, d.exit, d.invested, d.qty, d.fee];
+    d.buys.forEach(function (b) { raws.push(b.price, b.amount, b.shares, b.fee); });
+    d.sales.forEach(function (x) { raws.push(x.price, x.shares, x.fee); });
+    if (raws.some(function (r) { return (r || "").trim() !== "" && !(parse(r) >= 0); })) return "Negative or invalid numbers can't be saved.";
     var ids = {};
     var damaged = d.buys.concat(d.sales).some(function (t) {
       var bad = !t.id || ids[t.id] || !(isNum(t.seq) && t.seq > 0);
@@ -2058,7 +2170,10 @@
     var data = cloneData(d.data);
     var stocks = state.stocks.map(function (x) {
       if (x.id !== s.id) return x;
-      return { id: x.id, ticker: x.ticker, name: x.name, entry: data.entry, exit: data.exit, invested: data.invested, buys: data.buys, sales: data.sales };
+      return {
+        id: x.id, ticker: x.ticker, name: x.name, entry: data.entry, exit: data.exit, invested: data.invested,
+        qty: data.qty, mode: data.mode, fee: data.fee, buys: data.buys, sales: data.sales
+      };
     });
     var next = { activeId: state.activeId, stocks: stocks, history: history };
     if (!write(next)) return STORAGE_FAILED;
@@ -2139,7 +2254,7 @@
     from[margin] = "0px";
     to[margin] = -gap + "px";
 
-    var faders = keepLabels ? li.querySelectorAll("input, .remove") : [li];
+    var faders = keepLabels ? li.querySelectorAll("input, .unit, .remove") : [li];
     li.style.overflow = "hidden";
     var anim = li.animate([from, to], { duration: ROW_REMOVE_MS, easing: ROW_EASE, fill: "forwards" });
     Array.prototype.forEach.call(faders, function (el) {
@@ -2155,26 +2270,46 @@
     };
   }
 
+  var FEE_LABEL = '<span class="lbl-long">Commission</span><span class="lbl-short">Fee</span> ($)';
+
+  // A field with modes holds the amount or, in shares mode, the share count.
   var LISTS = {
     buys: {
       el: buysEl,
       add: addBtn,
+      keys: BUY_KEYS,
       remove: "Remove this buy",
       fields: [
         { key: "price", cls: "b-price", id: "bp", label: "Buy price ($)" },
-        { key: "amount", cls: "b-amount", id: "ba", label: "Amount ($)" }
+        { key: "amount", sharesKey: "shares", cls: "b-amount", id: "ba", label: "Amount ($)" },
+        { key: "fee", cls: "b-fee", id: "bf", label: FEE_LABEL, placeholder: "0" }
       ]
     },
     sales: {
       el: salesEl,
       add: addSaleBtn,
+      keys: SALE_KEYS,
       remove: "Remove this sale",
       fields: [
         { key: "price", cls: "s-price", id: "sp", label: "Sell price ($)" },
-        { key: "shares", cls: "s-shares", id: "ss", label: "Shares sold" }
+        { key: "shares", cls: "s-shares", id: "ss", label: "Shares sold" },
+        { key: "fee", cls: "s-fee", id: "sf", label: FEE_LABEL, placeholder: "0" }
       ]
     }
   };
+
+  function fieldKey(f, item) {
+    return f.sharesKey && byShares(item) ? f.sharesKey : f.key;
+  }
+
+  // The unit button shows what the field holds and switches it.
+  function setUnit(btn, labelEl, sharesMode, amountLabel) {
+    btn.textContent = sharesMode ? "Sh" : "$";
+    var hint = sharesMode ? "Enter a dollar amount instead" : "Enter shares instead";
+    btn.setAttribute("aria-label", hint);
+    btn.title = hint;
+    labelEl.textContent = sharesMode ? "Shares" : amountLabel;
+  }
 
   function createRow(kind, item, opts) {
     var list = LISTS[kind];
@@ -2183,14 +2318,20 @@
     var li = document.createElement("li");
     li.className = "buy";
     li.innerHTML = list.fields.map(function (f) {
-      return '<div><label for="' + f.id + id + '">' + f.label + '</label>' +
-        '<input id="' + f.id + id + '" class="' + f.cls + '" type="number" inputmode="decimal" step="any" autocomplete="off"></div>';
+      var input = '<input id="' + f.id + id + '" class="' + f.cls + '" type="number" inputmode="decimal" step="any" autocomplete="off"' +
+        (f.placeholder ? ' placeholder="' + f.placeholder + '"' : "") + ">";
+      if (f.sharesKey) input = '<div class="qty-wrap">' + input + '<button type="button" class="unit"></button></div>';
+      return '<div><label for="' + f.id + id + '">' + f.label + '</label>' + input + "</div>";
     }).join("") +
       '<button type="button" class="remove" aria-label="' + list.remove + '">' +
       '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg>' +
       '</button>' +
       (kind === "sales" ? '<p class="row-msg" id="rm' + id + '" aria-live="polite" hidden></p>' : "");
-    list.fields.forEach(function (f) { li.querySelector("." + f.cls).value = item[f.key]; });
+    list.fields.forEach(function (f) {
+      var input = li.querySelector("." + f.cls);
+      input.value = item[fieldKey(f, item)] || "";
+      if (f.sharesKey) setUnit(li.querySelector(".unit"), li.querySelector('label[for="' + input.id + '"]'), byShares(item), f.label);
+    });
     list.el.appendChild(li);
     if (opts && opts.animate && motionOK()) revealRow(li);
     return li;
@@ -2252,7 +2393,9 @@
     var d = current();
     entryEl.value = d.entry;
     exitEl.value = d.exit;
-    investedEl.value = d.invested;
+    investedEl.value = (byShares(d) ? d.qty : d.invested) || "";
+    setUnit(orderUnit, investedLabel, byShares(d), "Invested ($)");
+    orderFeeEl.value = d.fee || "";
     buysEl.innerHTML = "";
     salesEl.innerHTML = "";
     if (salesEl.marginAnim) dropListMargin(salesEl, salesEl.marginAnim);
@@ -2292,16 +2435,16 @@
     var s = current();
     var entry = parse(s.entry);
     var exit = parse(s.exit);
-    var invested = parse(s.invested);
-
-    var orderValid = entry > 0 && invested > 0;
+    var lot = orderLot(s);
+    var orderValid = lot.counted;
     var exitValid = exit >= 0;
 
-    // Section 1
-    var shares = orderValid ? invested / entry : NaN;
+    // Section 1 — profit and return are against the cost, commission included
+    var shares = orderValid ? lot.shares : NaN;
+    var cost = orderValid ? lot.cost : NaN;
     var value = orderValid && exitValid ? shares * exit : NaN;
-    var pl = value - invested;
-    var ret = pl / invested * 100;
+    var pl = value - cost;
+    var ret = pl / cost * 100;
 
     setOut($("o-shares"), fmtShares(shares));
     setOut($("o-value"), fmtMoney(value));
@@ -2309,7 +2452,7 @@
     setOut($("o-ret"), fmtPct(ret), ret);
 
     // Section 2 — the original order counts as the first buy
-    var pos = replay(s, orderValid ? shares : 0, orderValid ? invested : 0);
+    var pos = replay(s, orderValid ? shares : 0, orderValid ? cost : 0);
     showSaleNotes(pos.notes);
 
     // Once a sale counts, the results describe the shares still held.
@@ -2355,12 +2498,14 @@
   var SHARE_TOLERANCE = 0.00005;
 
   // FIFO cost basis, replayed in transaction order. A buy opens a new lot with
-  // its shares and cost; the original order is the oldest lot. A sale consumes
-  // shares from the oldest lots first (partial lots allowed); its realized
-  // result is proceeds minus the purchase cost of the consumed shares. The
-  // remaining position is the sum of the surviving lots, so a sale can change
-  // the average cost. A sale that cannot be made stops the replay: nothing
-  // after it is known.
+  // its shares and cost, commission included; the original order is the
+  // oldest lot. A sale consumes shares from the oldest lots first; a partly
+  // consumed lot gives up its cost, commission included, in proportion to the
+  // shares taken. A sale's realized result is its net proceeds (shares × price
+  // − its commission) minus the cost of the consumed shares. The remaining
+  // position is the sum of the surviving lots, so a sale can change the
+  // average cost. A sale that cannot be made stops the replay: nothing after
+  // it is known.
   function replay(s, orderShares, orderCost) {
     var lots = [];
     if (orderShares > 0) lots.push({ shares: orderShares, basis: orderCost });
@@ -2376,21 +2521,22 @@
       var t = steps[k].t;
       var price = parse(t.price);
       if (!steps[k].sale) {
-        var amount = parse(t.amount);
-        var counted = price > 0 && amount > 0;
-        if (counted) {
-          lots.push({ shares: amount / price, basis: amount });
-          shares += amount / price;
-          basis += amount;
+        var buy = purchase(t.price, t.mode, t.amount, t.shares, t.fee);
+        if (buy.counted) {
+          lots.push({ shares: buy.shares, basis: buy.cost });
+          shares += buy.shares;
+          basis += buy.cost;
         }
-        steps[k].res = { counted: counted, shares: amount / price };
+        steps[k].res = { counted: buy.counted, shares: buy.shares, cost: buy.cost };
         continue;
       }
 
       var qty = parse(t.shares);
+      var fee = feeOf(t.fee);
       var note = null;
       if (t.price.trim() !== "" && !(price >= 0)) note = { field: "s-price", text: "Enter a sell price of $0 or more." };
       else if (t.shares.trim() !== "" && !(qty > 0)) note = { field: "s-shares", text: "Enter shares sold above 0." };
+      else if (!(fee >= 0)) note = { field: "s-fee", text: "Enter a commission of $0 or more." };
       else if (isNaN(price) || isNaN(qty)) {
         steps[k].res = { counted: false };
         continue;
@@ -2433,10 +2579,11 @@
         lots = [];
       }
 
-      r.proceeds += qty * price;
-      r.realized += qty * price - cost;
+      var net = qty * price - fee;
+      r.proceeds += net;
+      r.realized += net - cost;
       r.sold += 1;
-      steps[k].res = { counted: true, shares: qty, proceeds: qty * price, realized: qty * price - cost };
+      steps[k].res = { counted: true, shares: qty, proceeds: net, realized: net - cost };
 
       shares = 0;
       basis = 0;
@@ -2487,7 +2634,21 @@
   }
   bindField(entryEl, "entry");
   bindField(exitEl, "exit");
-  bindField(investedEl, "invested");
+  bindField(orderFeeEl, "fee");
+
+  investedEl.addEventListener("input", function () {
+    var d = edit();
+    d[byShares(d) ? "qty" : "invested"] = investedEl.value;
+    onChange();
+  });
+
+  orderUnit.addEventListener("click", function () {
+    var d = edit();
+    d.mode = byShares(d) ? "" : "shares";
+    investedEl.value = (byShares(d) ? d.qty : d.invested) || "";
+    setUnit(orderUnit, investedLabel, byShares(d), "Invested ($)");
+    onChange();
+  });
 
   function liveRows(list) {
     return list.querySelectorAll(".buy:not(.leaving)");
@@ -2507,12 +2668,26 @@
       if (!current()[kind][idx]) return;
       var item = edit()[kind][idx];
       list.fields.forEach(function (f) {
-        if (e.target.classList.contains(f.cls)) item[f.key] = e.target.value;
+        if (e.target.classList.contains(f.cls)) item[fieldKey(f, item)] = e.target.value;
       });
       onChange();
     });
 
     list.el.addEventListener("click", function (e) {
+      var unit = e.target.closest(".unit");
+      if (unit) {
+        var row = unit.closest(".buy");
+        var at = rowIndex(list.el, row);
+        if (at < 0 || !current()[kind][at]) return;
+        var t = edit()[kind][at];
+        var f = list.fields.filter(function (x) { return x.sharesKey; })[0];
+        var input = row.querySelector("." + f.cls);
+        t.mode = byShares(t) ? "" : "shares";
+        input.value = t[fieldKey(f, t)] || "";
+        setUnit(unit, row.querySelector('label[for="' + input.id + '"]'), byShares(t), f.label);
+        onChange();
+        return;
+      }
       var btn = e.target.closest(".remove");
       if (!btn) return;
       var li = btn.closest(".buy");
@@ -2536,7 +2711,11 @@
     list.add.addEventListener("click", function () {
       var d = edit();
       var item = { id: newId("t"), seq: Math.max(nextSeq(d), nextSeq(active())), at: Date.now() };
-      list.fields.forEach(function (f) { item[f.key] = ""; });
+      list.keys.forEach(function (k) { item[k] = ""; });
+      if (kind === "buys") {
+        var last = d.buys[d.buys.length - 1] || d;
+        if (byShares(last)) item.mode = "shares";
+      }
       d[kind].push(item);
       createRow(kind, item, { animate: true });
       onChange();
@@ -2766,6 +2945,8 @@
   function fmtStamp(t) { return stampFmt.format(new Date(t)); }
 
   function fmtRaw(raw, kind) {
+    if (kind === "mode") return raw === "shares" ? "Shares" : "Amount";
+    raw = raw || "";
     if (raw.trim() === "") return "blank";
     var n = parse(raw);
     if (!isNum(n)) return raw;
@@ -2790,31 +2971,43 @@
     return isDirty() ? '<p class="hist-note">Showing saved data. Your unsaved changes aren’t included.</p>' : "";
   }
 
+  function hasFee(raw) { return !!raw && raw.trim() !== ""; }
+
+  // Amount purchases read as before; share-count purchases and any with a
+  // commission also show the resulting cost basis.
+  function buyLines(price, mode, amount, shares, fee, lot) {
+    var parts = ["Price " + fmtRaw(price, "price")];
+    if (mode === "shares") parts.push(fmtRaw(shares, "shares") + " shares");
+    else {
+      parts.push("Invested " + fmtRaw(amount, "money"));
+      if (lot.counted) parts.push(fmtShares(lot.shares) + " shares");
+    }
+    if (hasFee(fee)) parts.push("Commission " + fmtRaw(fee, "money"));
+    var lines = [line(parts.join(" · "))];
+    if (lot.counted && (mode === "shares" || hasFee(fee))) lines.push(line("Cost basis " + fmtMoney(lot.cost)));
+    if (!lot.counted) lines.push(line("Incomplete, so not included in calculations"));
+    return lines;
+  }
+
   function renderTransactions() {
     var s = active();
-    var entry = parse(s.entry);
-    var invested = parse(s.invested);
     var r = replayOf(s);
     var items = [];
-    if (s.entry.trim() || s.invested.trim()) {
-      var ok = entry > 0 && invested > 0;
-      items.push(txItem(1, "Original order", "Buy", [
-        line("Price " + fmtRaw(s.entry, "price") + " · Invested " + fmtRaw(s.invested, "money") + (ok ? " · " + fmtShares(invested / entry) + " shares" : "")),
-        ok ? "" : line("Incomplete, so not included in calculations")
-      ], null));
+    if (s.entry.trim() || s.invested.trim() || (s.qty || "").trim()) {
+      items.push(txItem(1, "Original order", "Buy", buyLines(s.entry, s.mode, s.invested, s.qty, s.fee, orderLot(s)), null));
     }
     r.order.forEach(function (step) {
       var t = step.t;
       var res = step.res;
       var n = items.length + 1;
       if (!step.sale) {
-        items.push(txItem(n, "Additional buy", "Buy", [
-          line("Price " + fmtRaw(t.price, "price") + " · Invested " + fmtRaw(t.amount, "money") + (res && res.counted ? " · " + fmtShares(res.shares) + " shares" : "")),
-          res && res.counted ? "" : line("Incomplete, so not included in calculations")
-        ], t.at));
+        items.push(txItem(n, "Additional buy", "Buy",
+          buyLines(t.price, t.mode, t.amount, t.shares, t.fee, res || { counted: false }), t.at));
         return;
       }
-      var lines = [line("Price " + fmtRaw(t.price, "price") + " · " + fmtRaw(t.shares, "shares") + " shares" + (res && res.counted ? " · Proceeds " + fmtMoney(res.proceeds) : ""))];
+      var lines = [line("Price " + fmtRaw(t.price, "price") + " · " + fmtRaw(t.shares, "shares") + " shares" +
+        (hasFee(t.fee) ? " · Commission " + fmtRaw(t.fee, "money") : "") +
+        (res && res.counted ? (hasFee(t.fee) ? " · Net proceeds " : " · Proceeds ") + fmtMoney(res.proceeds) : ""))];
       if (res && res.counted) {
         var pl = Math.abs(res.realized) < 0.005 ? 0 : res.realized;
         lines.push(line("Realized profit / loss " + fmtMoney(pl), pl > 0 ? "up" : pl < 0 ? "down" : ""));
@@ -2829,14 +3022,24 @@
       (items.length ? '<ul class="hist-list">' + items.join("") + "</ul>" : '<p class="hist-note">No saved transactions yet.</p>');
   }
 
-  var FIELDS = [["entry", "Entry price", "price"], ["exit", "Exit price", "price"], ["invested", "Invested amount", "money"]];
+  var FIELDS = [
+    ["entry", "Entry price", "price"], ["exit", "Exit price", "price"], ["invested", "Invested amount", "money"],
+    ["mode", "Order entry", "mode"], ["qty", "Shares bought", "shares"], ["fee", "Commission", "money"]
+  ];
+
+  function withFee(text, fee) {
+    return hasFee(fee) ? text + " + " + fmtRaw(fee, "money") + " commission" : text;
+  }
 
   function describeBuy(r) {
-    return !r.price && !r.amount ? "Blank row" : fmtRaw(r.amount, "money") + " at " + fmtRaw(r.price, "price");
+    if (!r.price && !r.amount && !r.shares && !r.fee) return "Blank row";
+    var what = byShares(r) ? fmtRaw(r.shares, "shares") + " shares" : fmtRaw(r.amount, "money");
+    return withFee(what + " at " + fmtRaw(r.price, "price"), r.fee);
   }
 
   function describeSale(r) {
-    return !r.price && !r.shares ? "Blank row" : fmtRaw(r.shares, "shares") + " shares at " + fmtRaw(r.price, "price");
+    if (!r.price && !r.shares && !r.fee) return "Blank row";
+    return withFee(fmtRaw(r.shares, "shares") + " shares at " + fmtRaw(r.price, "price"), r.fee);
   }
 
   function diffRows(out, before, after, noun, fields, describe) {
@@ -2866,8 +3069,13 @@
     FIELDS.forEach(function (f) {
       if (a[f[0]] !== b[f[0]]) out.push({ title: f[1] + " changed", lines: [fmtRaw(a[f[0]], f[2]) + " → " + fmtRaw(b[f[0]], f[2])] });
     });
-    diffRows(out, a.buys, b.buys, "Additional buy", [["price", "Price", "price"], ["amount", "Invested", "money"]], describeBuy);
-    diffRows(out, a.sales, b.sales, "Sale", [["price", "Price", "price"], ["shares", "Shares", "shares"]], describeSale);
+    diffRows(out, a.buys, b.buys, "Additional buy", [
+      ["price", "Price", "price"], ["amount", "Invested", "money"], ["mode", "Entered as", "mode"],
+      ["shares", "Shares", "shares"], ["fee", "Commission", "money"]
+    ], describeBuy);
+    diffRows(out, a.sales, b.sales, "Sale", [
+      ["price", "Price", "price"], ["shares", "Shares", "shares"], ["fee", "Commission", "money"]
+    ], describeSale);
     return out;
   }
 
