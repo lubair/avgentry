@@ -2354,14 +2354,18 @@
   // Shares typed as held to the displayed 4 decimal places count as all of them.
   var SHARE_TOLERANCE = 0.00005;
 
-  // Weighted-average cost, replayed in transaction order. A buy adds its shares
-  // and cost. A sale removes shares at the average cost of that moment, which
-  // it leaves unchanged; its realized result is proceeds minus the cost removed.
-  // A sale that cannot be made stops the replay: nothing after it is known.
+  // FIFO cost basis, replayed in transaction order. A buy opens a new lot with
+  // its shares and cost; the original order is the oldest lot. A sale consumes
+  // shares from the oldest lots first (partial lots allowed); its realized
+  // result is proceeds minus the purchase cost of the consumed shares. The
+  // remaining position is the sum of the surviving lots, so a sale can change
+  // the average cost. A sale that cannot be made stops the replay: nothing
+  // after it is known.
   function replay(s, orderShares, orderCost) {
+    var lots = [];
+    if (orderShares > 0) lots.push({ shares: orderShares, basis: orderCost });
     var shares = orderShares;
     var basis = orderCost;
-    var avg = shares > 0 ? basis / shares : NaN;
     var r = { proceeds: 0, realized: 0, sold: 0, failed: false, notes: [] };
     var steps = s.buys.map(function (t, i) { return { t: t, i: i, sale: 0 }; })
       .concat(s.sales.map(function (t, i) { return { t: t, i: i, sale: 1 }; }))
@@ -2375,9 +2379,9 @@
         var amount = parse(t.amount);
         var counted = price > 0 && amount > 0;
         if (counted) {
+          lots.push({ shares: amount / price, basis: amount });
           shares += amount / price;
           basis += amount;
-          avg = basis / shares;
         }
         steps[k].res = { counted: counted, shares: amount / price };
         continue;
@@ -2405,24 +2409,46 @@
 
       var closes = qty >= shares - SHARE_TOLERANCE;
       if (closes) qty = shares;
-      var cost = qty * avg;
+
+      // Consume the oldest lots first.
+      var cost = 0;
+      var left = qty;
+      while (left > 0 && lots.length) {
+        var lot = lots[0];
+        if (lot.shares <= left) {
+          cost += lot.basis;
+          left -= lot.shares;
+          lots.shift();
+        } else {
+          var part = lot.basis * (left / lot.shares);
+          cost += part;
+          lot.basis -= part;
+          lot.shares -= left;
+          left = 0;
+        }
+      }
+      if (closes && lots.length) {
+        // Within tolerance of the whole position: close out any residue.
+        for (var j = 0; j < lots.length; j++) cost += lots[j].basis;
+        lots = [];
+      }
+
       r.proceeds += qty * price;
       r.realized += qty * price - cost;
       r.sold += 1;
       steps[k].res = { counted: true, shares: qty, proceeds: qty * price, realized: qty * price - cost };
-      if (closes) {
-        shares = 0;
-        basis = 0;
-        avg = NaN;
-      } else {
-        shares -= qty;
-        basis -= cost;
+
+      shares = 0;
+      basis = 0;
+      for (var m = 0; m < lots.length; m++) {
+        shares += lots[m].shares;
+        basis += lots[m].basis;
       }
     }
 
     r.shares = shares;
     r.basis = basis;
-    r.avg = avg;
+    r.avg = shares > 0 ? basis / shares : NaN;
     return r;
   }
 
@@ -2798,7 +2824,7 @@
       items.push(txItem(n, "Sale", "Sell", lines, t.at));
     });
     panelTx.innerHTML =
-      '<p class="hist-note">Planned transactions in the order they were added to AVG Entry. Realized results use the weighted-average cost at each sale. Times show when a transaction was added here, not when it was executed.</p>' +
+      '<p class="hist-note">Planned transactions in the order they were added to AVG Entry. Realized results use FIFO: each sale consumes the oldest purchased shares first. Times show when a transaction was added here, not when it was executed.</p>' +
       savedNote() +
       (items.length ? '<ul class="hist-list">' + items.join("") + "</ul>" : '<p class="hist-note">No saved transactions yet.</p>');
   }
