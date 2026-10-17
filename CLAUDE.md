@@ -14,7 +14,7 @@ To run locally, serve the folder over HTTP (e.g. `python3 -m http.server`) — `
 
 ## Deployment
 
-GitHub Pages, legacy build from `main` at `/`. Pushing to `origin/main` publishes; there is no CI or build. Commits use the existing global Git identity (Lubair Mahfud) and the osxkeychain credential helper.
+GitHub Pages, legacy build from `main` at `/`. Pushing to `origin/main` publishes; there is no CI or build. Commits use the existing local Git configuration.
 
 ## Data and storage
 
@@ -49,16 +49,28 @@ GitHub Pages, legacy build from `main` at `/`. Pushing to `origin/main` publishe
 
 ### Calculation accuracy
 - Never silently change formulas or financial assumptions; if a request would, say so and ask first.
-- Support fractional shares, commissions, additional buys, sales, FIFO basis, realized/unrealized P/L as currently implemented.
+- Maintain accurate average entry, share quantity, commission, cost basis, and realized/unrealized P/L calculations, including fractional shares, additional buys, sales, and FIFO basis, as currently implemented.
 - Avoid introducing rounding or floating-point drift.
 
 ### Workflow
 - Implement only what is requested; keep diffs minimal and focused.
 - After a change, verify it in a browser (light and dark, mobile and desktop widths as relevant) and check affected calculations with concrete numbers.
-- Don't add tests, docs, experiments, or prototypes unless asked.
-- Fix any errors your change introduces. Give concise summaries.
+- Avoid unnecessary refactoring, tests, documentation, experiments, or prototypes.
+- Fix any errors your change introduces.
 
-### Publishing
-- By default, finish each requested implementation by committing to `main` and pushing to `origin` to publish on GitHub Pages, unless local-only work is requested.
+### Security
+- This repository and its Pages site are public: never put passwords, API keys, tokens, or other credentials in any file.
+
+### Git and publishing
+- Preserve the existing GitHub Pages deployment workflow. Never change hosting providers or deployment architecture without approval.
+- **Application implementation tasks:** publishing is part of the default workflow. After completing and validating the change, use the existing Git configuration to commit the relevant files and push to `origin/main`.
+- Never publish broken or unverified implementation changes.
 - Use short, imperative commit messages in the existing style (e.g. "Clarify sale profit and loss display").
-- After pushing, confirm the Pages build succeeded and the live site reflects the change.
+- After pushing, confirm the Pages build succeeded and the live site reflects the change. If deployment fails, report the failure; never claim the site was updated.
+- Never force-push, rewrite Git history, or perform destructive Git operations.
+- Never create branches or pull requests unless explicitly requested.
+
+### When not to publish
+- **Setup tasks, audits, documentation changes, investigations, and read-only requests:** do not commit, push, or deploy unless explicitly requested, and do not modify application code unnecessarily.
+- **Explicitly local-only requests:** do not commit, push, or deploy.
+- Report implementation and publication results concisely.
